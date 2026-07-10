@@ -18,6 +18,7 @@ namespace Torath
         public DbSet<Newspaper> Newspapers { get; set; }
         public DbSet<NewspaperIssue> NewspaperIssues { get; set; }
         public DbSet<Article> Articles { get; set; }
+        public DbSet<User> Users { get; set; }
 
         // 2. Configure the database design rules
         protected override void OnModelCreating(ModelBuilder modelBuilder)
