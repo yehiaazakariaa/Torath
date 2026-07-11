@@ -20,6 +20,13 @@ builder.Services.AddDbContext<TorathDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>(); // Added Categories!
 
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IResearchPaperService, ResearchPaperService>(); // If you built the implementation
+
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IFileService, FileService>();
+
 // 4. Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -84,6 +91,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 // 3. Security (These MUST be exactly in this order)
 app.UseAuthentication(); // "Who are you? Do you have a token?"

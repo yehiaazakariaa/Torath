@@ -4,6 +4,8 @@
     public class ResearchPaper : BaseContent
     {
         public string Authors { get; set; } = string.Empty;
+
+        public string Author { get; set; } = string.Empty;
         public string Abstract { get; set; } = string.Empty;
         public string Keywords { get; set; } = string.Empty;
 
@@ -12,5 +14,9 @@
         public int PublicationYear { get; set; }
         public string JournalOrConferenceName { get; set; } = string.Empty;
         public string DOI { get; set; } = string.Empty; // Digital Object Identifier
+
+        public string? CoverImageUrl { get; set; }
+        public string? PdfFileUrl { get; set; }
+
     }
 }

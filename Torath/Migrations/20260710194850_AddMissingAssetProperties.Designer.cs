@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Torath;
 
@@ -11,9 +12,11 @@ using Torath;
 namespace Torath.Migrations
 {
     [DbContext(typeof(TorathDbContext))]
-    partial class TorathDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260710194850_AddMissingAssetProperties")]
+    partial class AddMissingAssetProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -248,9 +251,6 @@ namespace Torath.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CoverImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Edition")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -262,9 +262,6 @@ namespace Torath.Migrations
                     b.Property<int>("NumberOfPages")
                         .HasColumnType("int");
 
-                    b.Property<string>("PdfFileUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("PublicationYear")
                         .HasColumnType("int");
 
@@ -275,7 +272,7 @@ namespace Torath.Migrations
                         {
                             Id = 1,
                             CategoryId = 1,
-                            CreatedDate = new DateTime(2026, 7, 11, 2, 39, 35, 123, DateTimeKind.Utc).AddTicks(8796),
+                            CreatedDate = new DateTime(2026, 7, 10, 19, 48, 50, 318, DateTimeKind.Utc).AddTicks(4912),
                             Description = "A Craftsman's Guide to Software Structure",
                             Language = "English",
                             PublicationDate = new DateTime(2017, 9, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -323,9 +320,6 @@ namespace Torath.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CoverImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("DOI")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -336,9 +330,6 @@ namespace Torath.Migrations
 
                     b.Property<string>("Keywords")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PdfFileUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PublicationYear")
