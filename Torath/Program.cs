@@ -23,11 +23,11 @@ builder.Services.AddScoped<ICategoryService, CategoryService>(); // Added Catego
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IResearchPaperService, ResearchPaperService>(); // If you built the implementation
 builder.Services.AddScoped<IMagazineService, MagazineService>();
-
+builder.Services.AddScoped<INewspaperIssueService, NewspaperIssueService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INewspaperService, NewspaperService>();
-
+builder.Services.AddScoped<IMagazineIssueService, MagazineIssueService>();
 // 4. Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
