@@ -28,6 +28,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INewspaperService, NewspaperService>();
 builder.Services.AddScoped<IMagazineIssueService, MagazineIssueService>();
+builder.Services.AddScoped<IArticleService, ArticleService>();
+
+
+
 // 4. Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
