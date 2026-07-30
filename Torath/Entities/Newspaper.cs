@@ -1,4 +1,6 @@
-﻿namespace Torath.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Torath.Entities
 {
     public class Newspaper : BaseContent
     {
@@ -6,6 +8,7 @@
         // "A newspaper issue can contain multiple articles"[cite: 73].
 
         public string Frequency { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
         public string? PdfFilePath { get; set; }
         public ICollection<NewspaperIssue> Issues { get; set; } = new List<NewspaperIssue>();

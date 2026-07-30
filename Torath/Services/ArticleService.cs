@@ -1,66 +1,51 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Torath.Entities;
 using Torath.DTOs;
+using Torath.Repositories; // Add this using statement
 
 namespace Torath.Services
 {
     public class ArticleService : IArticleService
     {
-        private readonly TorathDbContext _context;
+        // Inject the Repository instead of the DbContext!
+        private readonly IRepository<Article> _articleRepository;
 
-        public ArticleService(TorathDbContext context)
+        public ArticleService(IRepository<Article> articleRepository)
         {
-            _context = context;
+            _articleRepository = articleRepository;
         }
 
-        public async Task<object> GetAllAsync(int page, int pageSize, string? author)
+        public async Task<object> GetAllAsync(int page, int pageSize, string? author, CancellationToken cancellationToken)
         {
-            // 1. Start with the base query
-            var query = _context.Articles.AsQueryable();
+            var query = _articleRepository.GetQueryable(); // Use the repository's queryable
 
-            // 2. Apply filtering if the 'author' parameter was provided[cite: 1]
             if (!string.IsNullOrWhiteSpace(author))
             {
-                // Uses .Contains to allow partial matches (e.g., searching "John" finds "John Doe")
                 query = query.Where(a => a.Author.Contains(author));
             }
 
-            // 3. Count total records after filtering for accurate pagination metadata
-            var totalRecords = await query.CountAsync();
-
-            // 4. Apply pagination (Skip and Take)
+            // Pass the token to EF Core methods
+            var totalRecords = await query.CountAsync(cancellationToken);
             var data = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            // 5. Return the expected anonymous object structure
-            return new
-            {
-                data = data,
-                totalRecords = totalRecords,
-                pageNumber = page,
-                pageSize = pageSize
-            };
+            return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<Article> GetByIdAsync(int id)
+        public async Task<Article> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _context.Articles.FindAsync(id);
+            // Pass the token down
+            return await _articleRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public async Task<Article> CreateAsync(ArticleWriteDto request)
+        public async Task<Article> CreateAsync(ArticleWriteDto request, CancellationToken cancellationToken)
         {
-            // Optional but recommended: Ensure the article is assigned to exactly one parent type
-            if (request.MagazineIssueId == null && request.NewspaperIssueId == null)
-            {
-                throw new Exception("An article must be assigned to either a MagazineIssueId or a NewspaperIssueId.");
-            }
-
-            // Map DTO to Entity[cite: 1]
             var article = new Article
             {
                 Title = request.Title,
@@ -73,21 +58,18 @@ namespace Torath.Services
                 NewspaperIssueId = request.NewspaperIssueId
             };
 
-            _context.Articles.Add(article);
-            await _context.SaveChangesAsync();
+            // Use repository methods
+            await _articleRepository.AddAsync(article, cancellationToken);
+            await _articleRepository.SaveChangesAsync(cancellationToken);
 
             return article;
         }
 
-        public async Task UpdateAsync(int id, ArticleWriteDto request)
+        public async Task UpdateAsync(int id, ArticleWriteDto request, CancellationToken cancellationToken)
         {
-            var article = await _context.Articles.FindAsync(id);
-            if (article == null)
-            {
-                throw new Exception($"Article with ID {id} not found.");
-            }
+            var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
+            if (article == null) throw new Exception($"Article with ID {id} not found.");
 
-            // Apply updates
             article.Title = request.Title;
             article.Summary = request.Summary;
             article.Content = request.Content;
@@ -97,17 +79,17 @@ namespace Torath.Services
             article.MagazineIssueId = request.MagazineIssueId;
             article.NewspaperIssueId = request.NewspaperIssueId;
 
-            _context.Articles.Update(article);
-            await _context.SaveChangesAsync();
+            _articleRepository.Update(article);
+            await _articleRepository.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var article = await _context.Articles.FindAsync(id);
+            var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
             if (article != null)
             {
-                _context.Articles.Remove(article);
-                await _context.SaveChangesAsync();
+                _articleRepository.Delete(article);
+                await _articleRepository.SaveChangesAsync(cancellationToken);
             }
         }
     }

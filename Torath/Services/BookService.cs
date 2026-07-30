@@ -1,114 +1,100 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Torath.DTOs;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Torath.Entities;
-
+using Torath.DTOs;
+using Torath.Repositories;
 
 namespace Torath.Services
 {
     public class BookService : IBookService
     {
-        private readonly TorathDbContext _context;
-        private readonly IFileService _fileService;
+        private readonly IRepository<Book> _bookRepository;
 
-        public BookService(TorathDbContext context, IFileService fileService) // Update constructor
+        public BookService(IRepository<Book> bookRepository)
         {
-            _context = context;
-            _fileService = fileService;
+            _bookRepository = bookRepository;
         }
 
-        public async Task<PagedResponse<BookDto>> GetAllAsync(int page, int pageSize, string? category, string? language)
+        public async Task<object> GetAllAsync(int page, int pageSize, string? category, string? language, CancellationToken cancellationToken)
         {
-            var query = _context.Books.Include(b => b.Category).AsQueryable();
+            var query = _bookRepository.GetQueryable();
 
             if (!string.IsNullOrWhiteSpace(category))
-                query = query.Where(b => b.Category.Name.Contains(category));
+            {
+                query = query.Where(b => b.Category != null && b.Category.Name.Contains(category));
+            }
 
             if (!string.IsNullOrWhiteSpace(language))
-                query = query.Where(b => b.Language == language);
-
-            var totalRecords = await query.CountAsync();
-            var books = await query.Skip((page - 1) * pageSize).Take(pageSize)
-                .Select(b => new BookDto
-                {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Description = b.Description,
-                    Language = b.Language,
-                    Publisher = b.Publisher,
-                    PublicationYear = b.PublicationYear,
-                    CategoryId = b.CategoryId,
-                    CategoryName = b.Category.Name,
-                    CoverImageUrl = b.CoverImageUrl,
-                    PdfFileUrl = b.PdfFileUrl // Added
-                }).ToListAsync();
-
-            return new PagedResponse<BookDto> { Data = books, TotalRecords = totalRecords, PageNumber = page, PageSize = pageSize };
-        }
-
-        public async Task<BookDto?> GetByIdAsync(int id)
-        {
-            var book = await _context.Books.Include(b => b.Category).FirstOrDefaultAsync(b => b.Id == id);
-            if (book == null) return null;
-
-            return new BookDto
             {
-                Id = book.Id,
-                Title = book.Title,
-                Description = book.Description,
-                Language = book.Language,
-                Publisher = book.Publisher,
-                PublicationYear = book.PublicationYear,
-                CategoryId = book.CategoryId,
-                CategoryName = book.Category.Name,
-                CoverImageUrl = book.CoverImageUrl,
-                PdfFileUrl = book.PdfFileUrl // Added
-            };
+                query = query.Where(b => b.Language.Contains(language));
+            }
+
+            var totalRecords = await query.CountAsync(cancellationToken);
+            var data = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<BookDto> CreateAsync(BookWriteDto request)
+        public async Task<Book?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            return await _bookRepository.GetByIdAsync(id, cancellationToken);
+        }
+
+        public async Task<Book> CreateAsync(BookWriteDto request, CancellationToken cancellationToken)
         {
             var book = new Book
             {
                 Title = request.Title,
                 Description = request.Description,
                 Language = request.Language,
+                PublicationDate = request.PublicationDate,
                 Publisher = request.Publisher,
-                PublicationYear = request.PublicationYear,
                 CategoryId = request.CategoryId,
-                CoverImageUrl = request.CoverImageUrl,
-                PdfFileUrl = request.PdfFileUrl // Added
+                ISBN = request.ISBN,
+                Authors = request.Authors,
+                NumberOfPages = request.NumberOfPages,
+                Edition = request.Edition
             };
 
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
-            return await GetByIdAsync(book.Id);
+            await _bookRepository.AddAsync(book, cancellationToken);
+            await _bookRepository.SaveChangesAsync(cancellationToken);
+            return book;
         }
 
-        public async Task<bool> UpdateAsync(int id, BookWriteDto request)
+        public async Task UpdateAsync(int id, BookWriteDto request, CancellationToken cancellationToken)
         {
-            var book = await _context.Books.FindAsync(id);
-            if (book == null) return false;
+            var book = await _bookRepository.GetByIdAsync(id, cancellationToken);
+            if (book == null) throw new Exception($"Book with ID {id} not found.");
 
-            book.Title = request.Title; book.Description = request.Description; book.Language = request.Language;
-            book.Publisher = request.Publisher; book.PublicationYear = request.PublicationYear; book.CategoryId = request.CategoryId;
-            book.CoverImageUrl = request.CoverImageUrl; book.PdfFileUrl = request.PdfFileUrl; // Added
+            book.Title = request.Title;
+            book.Description = request.Description;
+            book.Language = request.Language;
+            book.PublicationDate = request.PublicationDate;
+            book.Publisher = request.Publisher;
+            book.CategoryId = request.CategoryId;
+            book.ISBN = request.ISBN;
+            book.Authors = request.Authors;
+            book.NumberOfPages = request.NumberOfPages;
+            book.Edition = request.Edition;
 
-            await _context.SaveChangesAsync();
-            return true;
+            _bookRepository.Update(book);
+            await _bookRepository.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var book = await _context.Books.FindAsync(id);
-            if (book == null) return false;
-
-            // Delete associated physical files before removing the database record
-            _fileService.DeleteFile(book.CoverImageUrl);
-            _fileService.DeleteFile(book.PdfFileUrl);
-
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
-            return true;
+            var book = await _bookRepository.GetByIdAsync(id, cancellationToken);
+            if (book != null)
+            {
+                _bookRepository.Delete(book);
+                await _bookRepository.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }

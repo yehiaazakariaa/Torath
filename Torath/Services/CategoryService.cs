@@ -1,66 +1,47 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Torath.DTOs;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Torath.Entities;
+using Torath.DTOs;
+using Torath.Repositories;
 
 namespace Torath.Services
 {
     public class CategoryService : ICategoryService
     {
-        private readonly TorathDbContext _context;
+        private readonly IRepository<Category> _categoryRepository;
 
-        public CategoryService(TorathDbContext context)
+        public CategoryService(IRepository<Category> categoryRepository)
         {
-            _context = context;
+            _categoryRepository = categoryRepository;
         }
 
-        public async Task<PagedResponse<CategoryDto>> GetAllAsync(int pageNumber, int pageSize, string? search)
+        public async Task<object> GetAllAsync(int page, int pageSize, string? search, CancellationToken cancellationToken)
         {
-            var query = _context.Categories.AsQueryable();
+            var query = _categoryRepository.GetQueryable();
 
-            // 1. Apply Filtering if a search term exists
             if (!string.IsNullOrWhiteSpace(search))
             {
                 query = query.Where(c => c.Name.Contains(search) || c.Description.Contains(search));
             }
 
-            // 2. Count total records BEFORE paginating (needed for the frontend)
-            var totalRecords = await query.CountAsync();
-
-            // 3. Apply Pagination (Skip and Take)
-            var categories = await query
-                .Skip((pageNumber - 1) * pageSize)
+            var totalRecords = await query.CountAsync(cancellationToken);
+            var data = await query
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(c => new CategoryDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Description = c.Description
-                })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            return new PagedResponse<CategoryDto>
-            {
-                Data = categories,
-                TotalRecords = totalRecords,
-                PageNumber = pageNumber,
-                PageSize = pageSize
-            };
+            return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<CategoryDto?> GetByIdAsync(int id)
+        public async Task<Category?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null) return null;
-
-            return new CategoryDto
-            {
-                Id = category.Id,
-                Name = category.Name,
-                Description = category.Description
-            };
+            return await _categoryRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public async Task<CategoryDto> CreateAsync(CategoryWriteDto request)
+        public async Task<Category> CreateAsync(CategoryWriteDto request, CancellationToken cancellationToken)
         {
             var category = new Category
             {
@@ -68,37 +49,31 @@ namespace Torath.Services
                 Description = request.Description
             };
 
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
-
-            return new CategoryDto
-            {
-                Id = category.Id,
-                Name = category.Name,
-                Description = category.Description
-            };
+            await _categoryRepository.AddAsync(category, cancellationToken);
+            await _categoryRepository.SaveChangesAsync(cancellationToken);
+            return category;
         }
 
-        public async Task<bool> UpdateAsync(int id, CategoryWriteDto request)
+        public async Task UpdateAsync(int id, CategoryWriteDto request, CancellationToken cancellationToken)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null) return false;
+            var category = await _categoryRepository.GetByIdAsync(id, cancellationToken);
+            if (category == null) throw new Exception($"Category with ID {id} not found.");
 
             category.Name = request.Name;
             category.Description = request.Description;
 
-            await _context.SaveChangesAsync();
-            return true;
+            _categoryRepository.Update(category);
+            await _categoryRepository.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null) return false;
-
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
-            return true;
+            var category = await _categoryRepository.GetByIdAsync(id, cancellationToken);
+            if (category != null)
+            {
+                _categoryRepository.Delete(category);
+                await _categoryRepository.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }

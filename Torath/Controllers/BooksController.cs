@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading;
+using System.Threading.Tasks;
 using Torath.DTOs;
 using Torath.Services;
 
@@ -16,35 +18,41 @@ namespace Torath.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? category = null, [FromQuery] string? language = null)
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? category = null, [FromQuery] string? language = null, CancellationToken cancellationToken = default)
         {
-            return Ok(await _bookService.GetAllAsync(page, pageSize, category, language));
+            var result = await _bookService.GetAllAsync(page, pageSize, category, language, cancellationToken);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
         {
-            var book = await _bookService.GetByIdAsync(id);
-            return book == null ? NotFound() : Ok(book);
+            var book = await _bookService.GetByIdAsync(id, cancellationToken);
+            if (book == null) return NotFound();
+            return Ok(book);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(BookWriteDto request)
+        public async Task<IActionResult> Create([FromBody] BookWriteDto request, CancellationToken cancellationToken = default)
         {
-            var book = await _bookService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = book.Id }, book);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var createdBook = await _bookService.CreateAsync(request, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = createdBook.Id }, createdBook);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, BookWriteDto request)
+        public async Task<IActionResult> Update(int id, [FromBody] BookWriteDto request, CancellationToken cancellationToken = default)
         {
-            return await _bookService.UpdateAsync(id, request) ? NoContent() : NotFound();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            await _bookService.UpdateAsync(id, request, cancellationToken);
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            return await _bookService.DeleteAsync(id) ? NoContent() : NotFound();
+            await _bookService.DeleteAsync(id, cancellationToken);
+            return NoContent();
         }
     }
 }

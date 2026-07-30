@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading;
+using System.Threading.Tasks;
 using Torath.DTOs;
 using Torath.Services;
 
@@ -16,54 +18,47 @@ namespace Torath.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _magazineService.GetAllAsync(page, pageSize);
+            var result = await _magazineService.GetAllAsync(page, pageSize, cancellationToken);
             return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
         {
-            var magazine = await _magazineService.GetByIdAsync(id);
-            if (magazine == null) return NotFound(new { message = "Magazine not found." });
+            var magazine = await _magazineService.GetByIdAsync(id, cancellationToken);
+            if (magazine == null) return NotFound();
             return Ok(magazine);
         }
 
-        // --- NESTED ENDPOINT ---
         [HttpGet("{id}/issues")]
-        public async Task<IActionResult> GetIssues(int id)
+        public async Task<IActionResult> GetIssues(int id, CancellationToken cancellationToken = default)
         {
-            // First check if the parent magazine exists
-            var magazine = await _magazineService.GetByIdAsync(id);
-            if (magazine == null) return NotFound(new { message = "Magazine not found." });
-
-            var issues = await _magazineService.GetIssuesByMagazineIdAsync(id);
+            var issues = await _magazineService.GetIssuesByMagazineIdAsync(id, cancellationToken);
             return Ok(issues);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] MagazineWriteDto request)
+        public async Task<IActionResult> Create([FromBody] MagazineWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            var magazine = await _magazineService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = magazine.Id }, magazine);
+            var createdMagazine = await _magazineService.CreateAsync(request, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = createdMagazine.Id }, createdMagazine);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] MagazineWriteDto request)
+        public async Task<IActionResult> Update(int id, [FromBody] MagazineWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            var updated = await _magazineService.UpdateAsync(id, request);
-            if (!updated) return NotFound(new { message = "Magazine not found." });
+            await _magazineService.UpdateAsync(id, request, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            var deleted = await _magazineService.DeleteAsync(id);
-            if (!deleted) return NotFound(new { message = "Magazine not found." });
+            await _magazineService.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
     }

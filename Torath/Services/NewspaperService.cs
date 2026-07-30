@@ -1,104 +1,98 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-
-using Torath.DTOs;
 using Torath.Entities;
-
+using Torath.DTOs;
+using Torath.Repositories;
 
 namespace Torath.Services
 {
     public class NewspaperService : INewspaperService
     {
-        private readonly TorathDbContext _context;
+        private readonly IRepository<Newspaper> _newspaperRepository;
+        private readonly IRepository<NewspaperIssue> _issueRepository;
 
-        public NewspaperService(TorathDbContext context)
+        public NewspaperService(IRepository<Newspaper> newspaperRepository, IRepository<NewspaperIssue> issueRepository)
         {
-            _context = context;
+            _newspaperRepository = newspaperRepository;
+            _issueRepository = issueRepository;
         }
 
-        public async Task<object> GetAllAsync(int page, int pageSize)
+        public async Task<object> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            // 1. Get the total count for pagination metadata
-            var totalRecords = await _context.Newspapers.CountAsync();
-
-            // 2. Fetch the paginated data
-            var data = await _context.Newspapers
+            var query = _newspaperRepository.GetQueryable();
+            var totalRecords = await query.CountAsync(cancellationToken);
+            var data = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            // 3. Return the exact JSON structure your API expects
-            return new
-            {
-                data = data,
-                totalRecords = totalRecords,
-                pageNumber = page,
-                pageSize = pageSize
-            };
+            return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<Newspaper> GetByIdAsync(int id)
+        public async Task<Newspaper?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _context.Newspapers.FindAsync(id);
+            return await _newspaperRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public async Task<IEnumerable<NewspaperIssue>> GetIssuesByNewspaperIdAsync(int newspaperId)
+        public async Task<IEnumerable<NewspaperIssue>> GetIssuesByNewspaperIdAsync(int newspaperId, CancellationToken cancellationToken)
         {
-            return await _context.NewspaperIssues
+            return await _issueRepository.GetQueryable()
                 .Where(i => i.NewspaperId == newspaperId)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<Newspaper> CreateAsync(NewspaperWriteDto request)
+        public async Task<Newspaper> CreateAsync(NewspaperWriteDto request, CancellationToken cancellationToken)
         {
             var newspaper = new Newspaper
             {
                 Title = request.Title,
+                Description = request.Description,
+                Language = request.Language,
+                PublicationDate = request.PublicationDate,
                 Publisher = request.Publisher,
+                CategoryId = request.CategoryId,
+             
                 Frequency = request.Frequency,
                 Price = request.Price,
-                Language = request.Language,
-                CategoryId = request.CategoryId, // Required to pass the EF Foreign Key constraint
                 PdfFilePath = request.PdfFilePath
             };
 
-            _context.Newspapers.Add(newspaper);
-            await _context.SaveChangesAsync();
-
+            await _newspaperRepository.AddAsync(newspaper, cancellationToken);
+            await _newspaperRepository.SaveChangesAsync(cancellationToken);
             return newspaper;
         }
 
-        public async Task UpdateAsync(int id, NewspaperWriteDto request)
+        public async Task UpdateAsync(int id, NewspaperWriteDto request, CancellationToken cancellationToken)
         {
-            var newspaper = await _context.Newspapers.FindAsync(id);
-            if (newspaper == null)
-            {
-                throw new Exception($"Newspaper with ID {id} not found.");
-            }
+            var newspaper = await _newspaperRepository.GetByIdAsync(id, cancellationToken);
+            if (newspaper == null) throw new Exception($"Newspaper with ID {id} not found.");
 
-            // Map the new values to the existing entity
             newspaper.Title = request.Title;
+            newspaper.Description = request.Description;
+            newspaper.Language = request.Language;
+            newspaper.PublicationDate = request.PublicationDate;
             newspaper.Publisher = request.Publisher;
+            newspaper.CategoryId = request.CategoryId;
+        
             newspaper.Frequency = request.Frequency;
             newspaper.Price = request.Price;
-            newspaper.Language = request.Language;
-            newspaper.CategoryId = request.CategoryId;
             newspaper.PdfFilePath = request.PdfFilePath;
 
-            _context.Newspapers.Update(newspaper);
-            await _context.SaveChangesAsync();
+            _newspaperRepository.Update(newspaper);
+            await _newspaperRepository.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var newspaper = await _context.Newspapers.FindAsync(id);
+            var newspaper = await _newspaperRepository.GetByIdAsync(id, cancellationToken);
             if (newspaper != null)
             {
-                _context.Newspapers.Remove(newspaper);
-                await _context.SaveChangesAsync();
+                _newspaperRepository.Delete(newspaper);
+                await _newspaperRepository.SaveChangesAsync(cancellationToken);
             }
         }
     }

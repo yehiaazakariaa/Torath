@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 using System.Threading.Tasks;
 using Torath.DTOs;
 using Torath.Services;
@@ -16,58 +17,49 @@ namespace Torath.Controllers
             _newspaperService = newspaperService;
         }
 
-        // 1. GET /api/newspapers?page=1&pageSize=10
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
-            var result = await _newspaperService.GetAllAsync(page, pageSize);
+            var result = await _newspaperService.GetAllAsync(page, pageSize, cancellationToken);
             return Ok(result);
         }
 
-        // 2. GET /api/newspapers/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
         {
-            var newspaper = await _newspaperService.GetByIdAsync(id);
+            var newspaper = await _newspaperService.GetByIdAsync(id, cancellationToken);
             if (newspaper == null) return NotFound();
             return Ok(newspaper);
         }
 
-        // 3. GET /api/newspapers/{id}/issues
         [HttpGet("{id}/issues")]
-        public async Task<IActionResult> GetIssues(int id)
+        public async Task<IActionResult> GetIssues(int id, CancellationToken cancellationToken = default)
         {
-            var issues = await _newspaperService.GetIssuesByNewspaperIdAsync(id);
+            var issues = await _newspaperService.GetIssuesByNewspaperIdAsync(id, cancellationToken);
             return Ok(issues);
         }
 
-        // 4. POST /api/newspapers
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] NewspaperWriteDto request)
+        public async Task<IActionResult> Create([FromBody] NewspaperWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var createdNewspaper = await _newspaperService.CreateAsync(request);
-            // Assuming your BaseContent has an 'Id' property
+            var createdNewspaper = await _newspaperService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = createdNewspaper.Id }, createdNewspaper);
         }
 
-        // 5. PUT /api/newspapers/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] NewspaperWriteDto request)
+        public async Task<IActionResult> Update(int id, [FromBody] NewspaperWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            await _newspaperService.UpdateAsync(id, request);
-            return NoContent(); // or Ok()
+            await _newspaperService.UpdateAsync(id, request, cancellationToken);
+            return NoContent();
         }
 
-        // 6. DELETE /api/newspapers/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            await _newspaperService.DeleteAsync(id);
-            return NoContent(); // or Ok()
+            await _newspaperService.DeleteAsync(id, cancellationToken);
+            return NoContent();
         }
     }
 }

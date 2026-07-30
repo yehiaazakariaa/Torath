@@ -1,14 +1,18 @@
-﻿using Torath.DTOs;
+﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Torath.Entities;
+using Torath.DTOs;
 
 namespace Torath.Services
 {
     public interface IMagazineService
     {
-        Task<PagedResponse<MagazineDto>> GetAllAsync(int page, int pageSize);
-        Task<MagazineDto?> GetByIdAsync(int id);
-        Task<IEnumerable<MagazineIssueDto>> GetIssuesByMagazineIdAsync(int magazineId);
-        Task<MagazineDto> CreateAsync(MagazineWriteDto request);
-        Task<bool> UpdateAsync(int id, MagazineWriteDto request);
-        Task<bool> DeleteAsync(int id);
+        Task<object> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<Magazine?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<MagazineIssue>> GetIssuesByMagazineIdAsync(int magazineId, CancellationToken cancellationToken);
+        Task<Magazine> CreateAsync(MagazineWriteDto request, CancellationToken cancellationToken);
+        Task UpdateAsync(int id, MagazineWriteDto request, CancellationToken cancellationToken);
+        Task DeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

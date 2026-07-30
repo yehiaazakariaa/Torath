@@ -1,119 +1,95 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Torath.DTOs;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Torath.Entities;
+using Torath.DTOs;
+using Torath.Repositories;
 
 namespace Torath.Services
 {
     public class MagazineService : IMagazineService
     {
-        private readonly TorathDbContext _context;
+        private readonly IRepository<Magazine> _magazineRepository;
+        private readonly IRepository<MagazineIssue> _issueRepository;
 
-        public MagazineService(TorathDbContext context)
+        public MagazineService(IRepository<Magazine> magazineRepository, IRepository<MagazineIssue> issueRepository)
         {
-            _context = context;
+            _magazineRepository = magazineRepository;
+            _issueRepository = issueRepository;
         }
 
-        public async Task<PagedResponse<MagazineDto>> GetAllAsync(int page, int pageSize)
+        public async Task<object> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var query = _context.Magazines.Include(m => m.Category).AsQueryable();
-            var totalRecords = await query.CountAsync();
+            var query = _magazineRepository.GetQueryable();
+            var totalRecords = await query.CountAsync(cancellationToken);
+            var data = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
 
-            var magazines = await query.Skip((page - 1) * pageSize).Take(pageSize)
-              .Select(m => new MagazineDto
-              {
-                  Id = m.Id,
-                  Title = m.Title,
-                  Description = m.Description,
-                  Language = m.Language,
-                  Publisher = m.Publisher,
-                  PublicationDate = m.PublicationDate, // FIXED
-                  CategoryId = m.CategoryId,
-                  CategoryName = m.Category.Name,
-                  ISSN = m.ISSN
-              }).ToListAsync();
-
-            return new PagedResponse<MagazineDto> { Data = magazines, TotalRecords = totalRecords, PageNumber = page, PageSize = pageSize };
+            return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<MagazineDto?> GetByIdAsync(int id)
+        public async Task<Magazine?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var magazine = await _context.Magazines.Include(m => m.Category).FirstOrDefaultAsync(m => m.Id == id);
-            if (magazine == null) return null;
-
-            return new MagazineDto
-            {
-                Id = magazine.Id,
-                Title = magazine.Title,
-                Description = magazine.Description,
-                Language = magazine.Language,
-                Publisher = magazine.Publisher,
-                PublicationDate = magazine.PublicationDate, // FIXED
-                CategoryId = magazine.CategoryId,
-                CategoryName = magazine.Category.Name,
-                ISSN = magazine.ISSN
-            };
+            return await _magazineRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        // --- The Nested Issues Method ---
-        public async Task<IEnumerable<MagazineIssueDto>> GetIssuesByMagazineIdAsync(int magazineId)
+        public async Task<IEnumerable<MagazineIssue>> GetIssuesByMagazineIdAsync(int magazineId, CancellationToken cancellationToken)
         {
-            return await _context.MagazineIssues
+            return await _issueRepository.GetQueryable()
                 .Where(i => i.MagazineId == magazineId)
-                .Select(i => new MagazineIssueDto
-                {
-                    Id = i.Id,
-                    IssueNumber = i.IssueNumber,
-                    VolumeNumber = i.VolumeNumber,
-                    PublicationDate = i.PublicationDate,
-                    MagazineId = i.MagazineId
-                }).ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<MagazineDto> CreateAsync(MagazineWriteDto request)
+        public async Task<Magazine> CreateAsync(MagazineWriteDto request, CancellationToken cancellationToken)
         {
             var magazine = new Magazine
             {
                 Title = request.Title,
                 Description = request.Description,
                 Language = request.Language,
+                PublicationDate = request.PublicationDate,
                 Publisher = request.Publisher,
-                PublicationDate = request.PublicationDate, // FIXED
                 CategoryId = request.CategoryId,
-                ISSN = request.ISSN
+                ISSN = request.ISSN,
+              
             };
 
-            _context.Magazines.Add(magazine);
-            await _context.SaveChangesAsync();
-
-            // FIXED: The '!' tells the compiler this will not be null
-            return (await GetByIdAsync(magazine.Id))!;
+            await _magazineRepository.AddAsync(magazine, cancellationToken);
+            await _magazineRepository.SaveChangesAsync(cancellationToken);
+            return magazine;
         }
 
-        public async Task<bool> UpdateAsync(int id, MagazineWriteDto request)
+        public async Task UpdateAsync(int id, MagazineWriteDto request, CancellationToken cancellationToken)
         {
-            var magazine = await _context.Magazines.FindAsync(id);
-            if (magazine == null) return false;
+            var magazine = await _magazineRepository.GetByIdAsync(id, cancellationToken);
+            if (magazine == null) throw new Exception($"Magazine with ID {id} not found.");
 
             magazine.Title = request.Title;
             magazine.Description = request.Description;
             magazine.Language = request.Language;
+            magazine.PublicationDate = request.PublicationDate;
             magazine.Publisher = request.Publisher;
-            magazine.PublicationDate = request.PublicationDate; // FIXED
             magazine.CategoryId = request.CategoryId;
             magazine.ISSN = request.ISSN;
+          
 
-            await _context.SaveChangesAsync();
-            return true;
+            _magazineRepository.Update(magazine);
+            await _magazineRepository.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var magazine = await _context.Magazines.FindAsync(id);
-            if (magazine == null) return false;
-
-            _context.Magazines.Remove(magazine);
-            await _context.SaveChangesAsync();
-            return true;
+            var magazine = await _magazineRepository.GetByIdAsync(id, cancellationToken);
+            if (magazine != null)
+            {
+                _magazineRepository.Delete(magazine);
+                await _magazineRepository.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }

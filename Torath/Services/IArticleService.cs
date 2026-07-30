@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Torath.Entities;
 using Torath.DTOs;
 
@@ -6,15 +7,11 @@ namespace Torath.Services
 {
     public interface IArticleService
     {
-        // Notice the added 'author' parameter for filtering[cite: 1]
-        Task<object> GetAllAsync(int page, int pageSize, string? author);
-
-        Task<Article> GetByIdAsync(int id);
-
-        Task<Article> CreateAsync(ArticleWriteDto request);
-
-        Task UpdateAsync(int id, ArticleWriteDto request);
-
-        Task DeleteAsync(int id);
+        // Add CancellationToken to all signatures
+        Task<object> GetAllAsync(int page, int pageSize, string? author, CancellationToken cancellationToken);
+        Task<Article> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<Article> CreateAsync(ArticleWriteDto request, CancellationToken cancellationToken);
+        Task UpdateAsync(int id, ArticleWriteDto request, CancellationToken cancellationToken);
+        Task DeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

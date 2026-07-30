@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading;
+using System.Threading.Tasks;
 using Torath.DTOs;
 using Torath.Services;
 
@@ -7,7 +8,6 @@ namespace Torath.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    // [Authorize] <-- Uncomment this later to lock down the entire controller
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryService _categoryService;
@@ -18,45 +18,40 @@ namespace Torath.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null)
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, CancellationToken cancellationToken = default)
         {
-            var result = await _categoryService.GetAllAsync(page, pageSize, search);
+            var result = await _categoryService.GetAllAsync(page, pageSize, search, cancellationToken);
             return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
         {
-            var category = await _categoryService.GetByIdAsync(id);
-            if (category == null) return NotFound("Category not found.");
-
+            var category = await _categoryService.GetByIdAsync(id, cancellationToken);
+            if (category == null) return NotFound();
             return Ok(category);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CategoryWriteDto request)
+        public async Task<IActionResult> Create([FromBody] CategoryWriteDto request, CancellationToken cancellationToken = default)
         {
-            var createdCategory = await _categoryService.CreateAsync(request);
-
-            // Returns a 201 Created status and points to the GetById route
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var createdCategory = await _categoryService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = createdCategory.Id }, createdCategory);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, CategoryWriteDto request)
+        public async Task<IActionResult> Update(int id, [FromBody] CategoryWriteDto request, CancellationToken cancellationToken = default)
         {
-            var success = await _categoryService.UpdateAsync(id, request);
-            if (!success) return NotFound("Category not found.");
-
-            return NoContent(); // 204 No Content is standard for successful PUT
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            await _categoryService.UpdateAsync(id, request, cancellationToken);
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
-            var success = await _categoryService.DeleteAsync(id);
-            if (!success) return NotFound("Category not found.");
-
+            await _categoryService.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
     }

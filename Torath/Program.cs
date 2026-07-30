@@ -1,10 +1,11 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 using Torath;
 using Torath.Middleware;
+using Torath.Repositories;
 using Torath.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,7 +22,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>(); // Added Categories!
 
 builder.Services.AddScoped<IBookService, BookService>();
-builder.Services.AddScoped<IResearchPaperService, ResearchPaperService>(); // If you built the implementation
+builder.Services.AddScoped<IResearchPaperService, ResearchPaperService>(); 
 builder.Services.AddScoped<IMagazineService, MagazineService>();
 builder.Services.AddScoped<INewspaperIssueService, NewspaperIssueService>();
 builder.Services.AddHttpContextAccessor();
@@ -29,7 +30,8 @@ builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INewspaperService, NewspaperService>();
 builder.Services.AddScoped<IMagazineIssueService, MagazineIssueService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
-
+// This single line registers the repository for EVERY entity automatically!
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 
 // 4. Configure JWT Authentication
