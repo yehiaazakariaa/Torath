@@ -1,4 +1,5 @@
 using System.Text;
+using Elastic.Clients.Elasticsearch;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -7,6 +8,7 @@ using Torath;
 using Torath.Middleware;
 using Torath.Repositories;
 using Torath.Services;
+using Elastic.Clients.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,6 +84,22 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+
+
+
+// 1. Grab the URL from appsettings
+var elasticUri = builder.Configuration["Elasticsearch:Uri"];
+
+// 2. Configure the client
+var settings = new ElasticsearchClientSettings(new Uri(elasticUri))
+    .DefaultIndex("torath-searchable-content"); // The default index we created
+
+var elasticClient = new ElasticsearchClient(settings);
+
+// 3. Register the Client and your new Service into the Dependency Injection container
+builder.Services.AddSingleton(elasticClient);
+builder.Services.AddScoped<Torath.Services.IElasticSearchService, Torath.Services.ElasticSearchService>();
 
 var app = builder.Build();
 
