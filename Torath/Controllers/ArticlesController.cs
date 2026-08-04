@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using System.Threading.Tasks;
 using Torath.DTOs;
@@ -17,8 +18,8 @@ namespace Torath.Controllers
             _articleService = articleService;
         }
 
-        // Add CancellationToken to the parameters and pass it to the service
         [HttpGet]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? author = null, CancellationToken cancellationToken = default)
         {
             var result = await _articleService.GetAllAsync(page, pageSize, author, cancellationToken);
@@ -26,6 +27,7 @@ namespace Torath.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
         {
             var article = await _articleService.GetByIdAsync(id, cancellationToken);
@@ -34,6 +36,7 @@ namespace Torath.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] ArticleWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -43,6 +46,7 @@ namespace Torath.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] ArticleWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -52,6 +56,7 @@ namespace Torath.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
             await _articleService.DeleteAsync(id, cancellationToken);

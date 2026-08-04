@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using Torath.Helpers;
 using Torath.Services;
-using Torath.Helpers; // <-- This brings in your new Security Validator
 
 namespace Torath.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")] // File management is restricted exclusively to Admins
     public class FilesController : ControllerBase
     {
         private readonly IFileService _fileService;
@@ -23,15 +25,12 @@ namespace Torath.Controllers
         {
             try
             {
-                // 1. Check if a file was actually sent
                 if (file == null || file.Length == 0)
                     return BadRequest("No file uploaded.");
 
-                // 2. Basic surface-level validation
                 if (!file.ContentType.StartsWith("image/"))
                     return BadRequest("Only image files are allowed.");
 
-                // 3. Deep Security Validation (Magic Numbers Check)
                 if (!FileSecurityValidator.IsValidFile(file))
                     return BadRequest("Invalid or malicious file detected. Fake images are blocked.");
 
@@ -49,15 +48,12 @@ namespace Torath.Controllers
         {
             try
             {
-                // 1. Check if a file was actually sent
                 if (file == null || file.Length == 0)
                     return BadRequest("No file uploaded.");
 
-                // 2. Basic surface-level validation
                 if (file.ContentType != "application/pdf")
                     return BadRequest("Only PDF files are allowed.");
 
-                // 3. Deep Security Validation (Magic Numbers Check)
                 if (!FileSecurityValidator.IsValidFile(file))
                     return BadRequest("Invalid or malicious file detected. Fake PDFs are blocked.");
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using System.Threading.Tasks;
 using Torath.DTOs;
@@ -18,6 +19,7 @@ namespace Torath.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
         {
             var result = await _magazineService.GetAllAsync(page, pageSize, cancellationToken);
@@ -25,6 +27,7 @@ namespace Torath.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
         {
             var magazine = await _magazineService.GetByIdAsync(id, cancellationToken);
@@ -33,6 +36,7 @@ namespace Torath.Controllers
         }
 
         [HttpGet("{id}/issues")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetIssues(int id, CancellationToken cancellationToken = default)
         {
             var issues = await _magazineService.GetIssuesByMagazineIdAsync(id, cancellationToken);
@@ -40,6 +44,7 @@ namespace Torath.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] MagazineWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -48,6 +53,7 @@ namespace Torath.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] MagazineWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -56,6 +62,7 @@ namespace Torath.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
             await _magazineService.DeleteAsync(id, cancellationToken);
