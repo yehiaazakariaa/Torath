@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Torath.DTOs;
 using Torath.Services;
@@ -6,7 +7,7 @@ using Torath.Services;
 namespace Torath.Controllers
 {
     [Route("api/[controller]")] // Maps URL to /api/newspaperissues
-    [ApiController]             // Enables automatic model validation for [FromBody]
+    [ApiController]              // Enables automatic model validation for [FromBody]
     public class NewspaperIssuesController : ControllerBase
     {
         private readonly INewspaperIssueService _newspaperIssueService;
@@ -19,6 +20,7 @@ namespace Torath.Controllers
 
         // 1. GET /api/newspaperissues?page=1&pageSize=10
         [HttpGet]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _newspaperIssueService.GetAllAsync(page, pageSize);
@@ -27,6 +29,7 @@ namespace Torath.Controllers
 
         // 2. GET /api/newspaperissues/{id}
         [HttpGet("{id}")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetById(int id)
         {
             var issue = await _newspaperIssueService.GetByIdAsync(id);
@@ -36,6 +39,7 @@ namespace Torath.Controllers
 
         // 3. GET /api/newspaperissues/{id}/articles
         [HttpGet("{id}/articles")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetArticles(int id)
         {
             var articles = await _newspaperIssueService.GetArticlesByIssueIdAsync(id);
@@ -44,6 +48,7 @@ namespace Torath.Controllers
 
         // 4. POST /api/newspaperissues
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] NewspaperIssueWriteDto request)
         {
             // Check if the JSON payload is valid based on DTO rules
@@ -57,6 +62,7 @@ namespace Torath.Controllers
 
         // 5. PUT /api/newspaperissues/{id}
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] NewspaperIssueWriteDto request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -67,6 +73,7 @@ namespace Torath.Controllers
 
         // 6. DELETE /api/newspaperissues/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _newspaperIssueService.DeleteAsync(id);

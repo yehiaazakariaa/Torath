@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using System.Threading.Tasks;
 using Torath.DTOs;
@@ -18,6 +19,7 @@ namespace Torath.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? category = null, [FromQuery] string? language = null, CancellationToken cancellationToken = default)
         {
             var result = await _bookService.GetAllAsync(page, pageSize, category, language, cancellationToken);
@@ -25,6 +27,7 @@ namespace Torath.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
         {
             var book = await _bookService.GetByIdAsync(id, cancellationToken);
@@ -33,6 +36,7 @@ namespace Torath.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] BookWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -41,6 +45,7 @@ namespace Torath.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] BookWriteDto request, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -49,6 +54,7 @@ namespace Torath.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
             await _bookService.DeleteAsync(id, cancellationToken);

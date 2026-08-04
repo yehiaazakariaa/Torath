@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Torath.DTOs;
 using Torath.Services;
@@ -7,6 +8,7 @@ namespace Torath.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "User, Admin")] // Both roles can search the library
     public class SearchController : ControllerBase
     {
         private readonly IElasticSearchService _elasticSearchService;
@@ -16,8 +18,6 @@ namespace Torath.Controllers
             _elasticSearchService = elasticSearchService;
         }
 
-        // GET: api/search
-        // We use [FromQuery] so Postman can send all the filters in the URL!
         [HttpGet]
         public async Task<IActionResult> Search([FromQuery] SearchRequestDto request)
         {

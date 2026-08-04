@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Torath.DTOs;
 using Torath.Services;
@@ -20,6 +21,7 @@ namespace Torath.Controllers
 
         // 1. GET /api/magazineissues?page=1&pageSize=10
         [HttpGet]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _magazineIssueService.GetAllAsync(page, pageSize);
@@ -28,6 +30,7 @@ namespace Torath.Controllers
 
         // 2. GET /api/magazineissues/{id}
         [HttpGet("{id}")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetById(int id)
         {
             var issue = await _magazineIssueService.GetByIdAsync(id);
@@ -38,6 +41,7 @@ namespace Torath.Controllers
         // 3. GET /api/magazineissues/{id}/articles
         // This is the nested endpoint connecting issues to their granular content
         [HttpGet("{id}/articles")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetArticles(int id)
         {
             var articles = await _magazineIssueService.GetArticlesByIssueIdAsync(id);
@@ -46,6 +50,7 @@ namespace Torath.Controllers
 
         // 4. POST /api/magazineissues
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] MagazineIssueWriteDto request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -58,6 +63,7 @@ namespace Torath.Controllers
 
         // 5. PUT /api/magazineissues/{id}
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] MagazineIssueWriteDto request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -68,6 +74,7 @@ namespace Torath.Controllers
 
         // 6. DELETE /api/magazineissues/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _magazineIssueService.DeleteAsync(id);

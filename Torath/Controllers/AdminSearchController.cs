@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace Torath.Controllers
 {
     [Route("api/admin/search-index")]
     [ApiController]
+    [Authorize(Roles = "Admin")] // RESTRICTED EXCLUSIVELY TO ADMINS
     public class AdminSearchController : ControllerBase
     {
         private readonly TorathDbContext _context;
@@ -29,7 +31,6 @@ namespace Torath.Controllers
             await _elasticSearchService.CreateIndexIfNotExistsAsync();
             var allDocuments = new List<SearchDocument>();
 
-            // 1. Read Books 
             var books = await _context.Books.Select(b => new SearchDocument
             {
                 Id = $"Book_{b.Id}",
@@ -44,7 +45,6 @@ namespace Torath.Controllers
             }).ToListAsync();
             allDocuments.AddRange(books);
 
-            // 2. Read Articles 
             var articles = await _context.Articles.Select(a => new SearchDocument
             {
                 Id = $"Article_{a.Id}",
@@ -59,7 +59,6 @@ namespace Torath.Controllers
             }).ToListAsync();
             allDocuments.AddRange(articles);
 
-            // 3. Read Research Papers 
             var papers = await _context.ResearchPapers.Select(p => new SearchDocument
             {
                 Id = $"ResearchPaper_{p.Id}",
@@ -74,7 +73,6 @@ namespace Torath.Controllers
             }).ToListAsync();
             allDocuments.AddRange(papers);
 
-            // 4. Read Magazines (NEW)
             var magazines = await _context.Magazines.Select(m => new SearchDocument
             {
                 Id = $"Magazine_{m.Id}",
@@ -89,7 +87,6 @@ namespace Torath.Controllers
             }).ToListAsync();
             allDocuments.AddRange(magazines);
 
-            // 5. Read Newspapers (NEW)
             var newspapers = await _context.Newspapers.Select(n => new SearchDocument
             {
                 Id = $"Newspaper_{n.Id}",
@@ -171,7 +168,6 @@ namespace Torath.Controllers
             return Ok(new { Message = $"Successfully rebuilt index for {papers.Count} Research Papers." });
         }
 
-        // NEW ENDPOINT: Magazines
         [HttpPost("rebuild/magazines")]
         public async Task<IActionResult> RebuildMagazinesIndex()
         {
@@ -193,7 +189,6 @@ namespace Torath.Controllers
             return Ok(new { Message = $"Successfully rebuilt index for {magazines.Count} Magazines." });
         }
 
-        // NEW ENDPOINT: Newspapers
         [HttpPost("rebuild/newspapers")]
         public async Task<IActionResult> RebuildNewspapersIndex()
         {
