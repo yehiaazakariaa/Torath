@@ -22,6 +22,7 @@ namespace Torath.SearchModels
         public string Language { get; set; } = string.Empty;
         public List<string> Keywords { get; set; } = new(); // List of tags/keywords
         public DateTime PublicationDate { get; set; }
+        public int? CategoryId { get; set; }
 
         // This is crucial: it tells us if this document is a "Book", "Magazine", "Article", etc.
         public string ContentType { get; set; } = string.Empty;

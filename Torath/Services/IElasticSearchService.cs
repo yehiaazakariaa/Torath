@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Torath.DTOs;
 using Torath.SearchModels;
 
 namespace Torath.Services
@@ -11,6 +12,7 @@ namespace Torath.Services
         // Deletes a document from the Elasticsearch index when it's removed from SQL
         Task DeleteDocumentAsync(string documentId);
 
-        Task<IEnumerable<SearchDocument>> SearchAsync(string keyword);
+        // The single unified search method using our new DTO
+        Task<object> SearchAsync(SearchRequestDto request);
     }
 }
