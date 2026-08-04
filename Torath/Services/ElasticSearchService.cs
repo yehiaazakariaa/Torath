@@ -164,5 +164,60 @@ namespace Torath.Services
                 })
             };
         }
+
+
+
+        public async Task CreateIndexIfNotExistsAsync()
+        {
+            var existsResponse = await _client.Indices.ExistsAsync(IndexName);
+
+            if (!existsResponse.Exists)
+            {
+                var createResponse = await _client.Indices.CreateAsync(IndexName);
+
+                if (!createResponse.IsValidResponse)
+                {
+                    _logger.LogError("Failed to create Elasticsearch index '{IndexName}': {Reason}", IndexName, createResponse.DebugInformation);
+                    throw new Exception($"Could not create index {IndexName}");
+                }
+
+                _logger.LogInformation("Successfully created Elasticsearch index '{IndexName}'.", IndexName);
+            }
+        }
+
+        public async Task BulkIndexDocumentsAsync(IEnumerable<SearchDocument> documents)
+        {
+            if (documents == null || !documents.Any()) return;
+
+            // We use 'UpdateMany' with 'DocAsUpsert(true)' to fulfill two requirements:
+            // 1. Update existing documents when necessary.
+            // 2. Avoid duplicate documents (by matching on the exact ID).
+            var bulkResponse = await _client.BulkAsync(b => b
+                .Index(IndexName)
+                .UpdateMany(documents, (descriptor, doc) => descriptor
+                    .Id(doc.Id)
+                    .Doc(doc)
+                    .DocAsUpsert(true)
+                )
+            );
+
+            // Requirement: Log failures.
+            if (!bulkResponse.IsValidResponse || bulkResponse.Errors)
+            {
+                _logger.LogError("Bulk indexing encountered errors. Debug Info: {Info}", bulkResponse.DebugInformation);
+
+                if (bulkResponse.ItemsWithErrors != null)
+                {
+                    foreach (var itemWithError in bulkResponse.ItemsWithErrors)
+                    {
+                        _logger.LogError("Failed to sync document {Id}: {Error}", itemWithError.Id, itemWithError.Error);
+                    }
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Successfully synced {Count} documents to Elasticsearch.", documents.Count());
+            }
+        }
     }
 }
