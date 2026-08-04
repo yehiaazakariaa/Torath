@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Torath.DTOs;
 using Torath.Services;
 
 namespace Torath.Controllers
@@ -8,31 +9,20 @@ namespace Torath.Controllers
     [ApiController]
     public class SearchController : ControllerBase
     {
-        private readonly IElasticSearchService _elasticService;
+        private readonly IElasticSearchService _elasticSearchService;
 
-        public SearchController(IElasticSearchService elasticService)
+        public SearchController(IElasticSearchService elasticSearchService)
         {
-            _elasticService = elasticService;
+            _elasticSearchService = elasticSearchService;
         }
 
-        // GET: api/search?query=egypt
+        // GET: api/search
+        // We use [FromQuery] so Postman can send all the filters in the URL!
         [HttpGet]
-        public async Task<IActionResult> GlobalSearch([FromQuery] string query)
+        public async Task<IActionResult> Search([FromQuery] SearchRequestDto request)
         {
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                return BadRequest(new { message = "Search query cannot be empty." });
-            }
-
-            // Call your shiny new Elasticsearch method!
-            var results = await _elasticService.SearchAsync(query);
-
-            return Ok(new
-            {
-                searchQuery = query,
-                totalResults = results.Count(), // Shows how many items matched
-                data = results // Returns the mix of Books, Articles, Magazines, etc!
-            });
+            var result = await _elasticSearchService.SearchAsync(request);
+            return Ok(result);
         }
     }
 }
