@@ -1,0 +1,110 @@
+﻿<html xmlns:tp="http://schemas.datacontract.org/2004/07/Microsoft.VisualStudio.TestPlatform.Extensions.HtmlLogger.ObjectModel" xmlns:a="http://schemas.microsoft.com/2003/10/Serialization/Arrays" xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+  <body>
+    <h1>Test run details</h1>
+    <div class="summary">
+      <div class="block"><span>Total tests</span><div class="total-tests">9</div><br></div>
+      <div class="block"><span>Passed  : </span><span class="passedTests">9</span><br><span>Failed  : </span><span class="failedTests">0</span><br><span>Skipped : </span><span class="skippedTests">0</span><br></div>
+      <div class="block"><span>Pass percentage</span><div class="pass-percentage">100 %</div><br></div>
+      <div class="block"><span>Run duration</span><div class="test-run-time">3s 333ms</div><br></div><br></div>
+    <h2>All Results</h2><details><summary>C:\Users\yehia zakaria\Desktop\Link\Torath\Torath.Tests\bin\Debug\net8.0\Torath.Tests.dll</summary><div class="inner-row" Id="-640807318">
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Validation.CategoryValidationTests.CategoryWriteDto_ShouldPassValidation_WhenNameIsProvided​</span><div class="duration"><span>1s 107ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Validation.CategoryValidationTests.CategoryWriteDto_ShouldFailValidation_WhenNameIsMissing​</span><div class="duration"><span>3ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Services.CategoryServiceTests.GetByIdAsync_ShouldReturnCategory_WhenCategoryExists​</span><div class="duration"><span>1s 208ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Services.CategoryServiceTests.CreateAsync_ShouldCallRepositoryAdd_WhenValidCategoryProvided​</span><div class="duration"><span>13ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Controllers.BooksControllerTests.GetById_ShouldReturnOk200_WhenBookExists​</span><div class="duration"><span>1s 227ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Controllers.SearchControllerTests.Search_ShouldReturnOk200_WhenQueryIsValid​</span><div class="duration"><span>1s 227ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Controllers.SearchControllerTests.Search_ShouldPassSearchRequestToElasticService_Once​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Controllers.BooksControllerTests.GetAll_ShouldApplyPaginationAndFilters_WhenProvided​</span><div class="duration"><span>4ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+        <div class="leaf-division">
+          <div><span class="pass">✔</span><span> Torath.Tests.Controllers.BooksControllerTests.GetById_ShouldReturnNotFound404_WhenBookDoesNotExist​</span><div class="duration"><span>2ms</span><br></div>
+          </div>
+          <div class="error-info"></div>
+        </div>
+      </div></details><div>
+      <h2>Informational messages</h2><span>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 8.0.29)</span><br><span>[xUnit.net 00:00:00.67]   Discovering: Torath.Tests</span><br><span>[xUnit.net 00:00:00.73]   Discovered:  Torath.Tests</span><br><span>[xUnit.net 00:00:00.76]   Starting:    Torath.Tests</span><br><span>     Warning:</span><br><span>     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and</span><br><span>     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for</span><br><span>     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.</span><br><span>     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.</span><br><span>     A paid commercial license supports the development and continued increasing support of</span><br><span>     Fluent Assertions users under both commercial and community licenses. Help us</span><br><span>     keep Fluent Assertions at the forefront of unit testing.</span><br><span>     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/</span><br><span>[xUnit.net 00:00:02.04]   Finished:    Torath.Tests</span><br></div>
+  </body>
+  <style>
+        body { font-family: Calibri, Verdana, Arial, sans-serif; background-color: White; color: Black; }
+        h2 {
+        margin-top: 15px;
+        margin-bottom:10px;
+        }
+        pre {
+        white-space: pre-wrap;
+        }
+        .summary {font-family:monospace;
+        display: -webkit-flex; /* Safari */
+        -webkit-flex-wrap: wrap; /* Safari 6.1+ */
+        display: flex;
+        flex-wrap: wrap;
+        }
+        .row {
+        border: 2px solid #ffffff;
+        width:100%;
+        cursor:pointer;
+        background-color:#d7e9fa;
+        }
+        .list-row {
+        border: 2px solid #ffffff;
+        width:100%;
+        cursor:pointer;
+        background-color:#ffffff;
+        }
+        .inner-row{
+        border: 2px solid #ffffff;
+        padding-left:1%;
+        margin-left:1%;
+        background-color:#ffffff;
+        }
+        .block{
+        width : 150px;
+        }
+        .leaf-division{
+        border: 2px solid #ffffff;
+        background-color:#e6eff7;
+        }
+        .pass { color: #0c0; }
+        .fail { color: #c00; }
+        .error-message { color : brown; }
+        .error-stack-trace { color: brown; }
+        .duration {float:right;padding-right:1%;}
+        .total-tests { font-size : 30px}
+        .test-run-time { font-size : 30px}
+        .pass-percentage { font-size : 30px}
+        .error-info{
+        margin-left:16px;
+        }
+      </style>
+</html>
