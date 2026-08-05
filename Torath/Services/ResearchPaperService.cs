@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Torath.DTOs;
 using Torath.Entities;
-using Torath.SearchModels; // 1. Added for SearchDocument
+using Torath.SearchModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +13,6 @@ namespace Torath.Services
     {
         private readonly TorathDbContext _context;
         private readonly IFileService _fileService;
-
-        // 2. Inject Elasticsearch Service
         private readonly IElasticSearchService _elasticService;
 
         public ResearchPaperService(TorathDbContext context, IFileService fileService, IElasticSearchService elasticService)
@@ -70,7 +68,6 @@ namespace Torath.Services
 
         public async Task<ResearchPaperDto> CreateAsync(ResearchPaperWriteDto request)
         {
-            // 3. Save to SQL
             var paper = new ResearchPaper
             {
                 Title = request.Title,
@@ -85,25 +82,23 @@ namespace Torath.Services
             _context.ResearchPapers.Add(paper);
             await _context.SaveChangesAsync();
 
-            // 4. Map to Elasticsearch Document
             var searchDoc = new SearchDocument
             {
                 Id = $"ResearchPaper_{paper.Id}",
                 OriginalId = paper.Id,
+                DatabaseId = paper.Id, // Mapped for frontend routing
                 Title = paper.Title,
-                Description = paper.Abstract, // Map the 'Abstract' field to the unified 'Description'
-                Content = "", // PDF content would require a text-extractor. Left empty for now.
+                Description = paper.Abstract,
+                Content = "",
                 Author = paper.Author,
                 Category = paper.CategoryId.ToString(),
-                Publisher = "", // Research papers in your model don't have publishers
-                Language = "", // Assuming language isn't tracked here
+                Publisher = "",
+                Language = "",
                 Keywords = new List<string>(),
-                // Convert the PublicationYear integer into a DateTime for the unified model
                 PublicationDate = new DateTime(paper.PublicationYear, 1, 1),
                 ContentType = "Research Paper"
             };
 
-            // 5. Index the document
             await _elasticService.IndexDocumentAsync(searchDoc);
 
             return await GetByIdAsync(paper.Id);
@@ -114,7 +109,6 @@ namespace Torath.Services
             var paper = await _context.ResearchPapers.FindAsync(id);
             if (paper == null) return false;
 
-            // 6. Update SQL
             paper.Title = request.Title;
             paper.Abstract = request.Abstract;
             paper.Author = request.Author;
@@ -125,11 +119,11 @@ namespace Torath.Services
 
             await _context.SaveChangesAsync();
 
-            // 7. Sync update to Elasticsearch
             var searchDoc = new SearchDocument
             {
                 Id = $"ResearchPaper_{paper.Id}",
                 OriginalId = paper.Id,
+                DatabaseId = paper.Id, // Mapped for frontend routing
                 Title = paper.Title,
                 Description = paper.Abstract,
                 Content = "",
@@ -154,11 +148,9 @@ namespace Torath.Services
             _fileService.DeleteFile(paper.CoverImageUrl);
             _fileService.DeleteFile(paper.PdfFileUrl);
 
-            // 8. Delete from SQL
             _context.ResearchPapers.Remove(paper);
             await _context.SaveChangesAsync();
 
-            // 9. Delete from Elasticsearch
             await _elasticService.DeleteDocumentAsync($"ResearchPaper_{id}");
 
             return true;

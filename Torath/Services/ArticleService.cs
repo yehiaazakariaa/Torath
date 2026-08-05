@@ -7,15 +7,13 @@ using Microsoft.EntityFrameworkCore;
 using Torath.Entities;
 using Torath.DTOs;
 using Torath.Repositories;
-using Torath.SearchModels; // 1. Added for SearchDocument
+using Torath.SearchModels;
 
 namespace Torath.Services
 {
     public class ArticleService : IArticleService
     {
         private readonly IRepository<Article> _articleRepository;
-
-        // 2. Inject Elasticsearch Service
         private readonly IElasticSearchService _elasticService;
 
         public ArticleService(IRepository<Article> articleRepository, IElasticSearchService elasticService)
@@ -49,7 +47,6 @@ namespace Torath.Services
 
         public async Task<Article> CreateAsync(ArticleWriteDto request, CancellationToken cancellationToken)
         {
-            // 3. Save to SQL
             var article = new Article
             {
                 Title = request.Title,
@@ -65,27 +62,25 @@ namespace Torath.Services
             await _articleRepository.AddAsync(article, cancellationToken);
             await _articleRepository.SaveChangesAsync(cancellationToken);
 
-            // 4. Map to Elasticsearch Document
             var searchDoc = new SearchDocument
             {
                 Id = $"Article_{article.Id}",
                 OriginalId = article.Id,
+                DatabaseId = article.Id, // Mapped for frontend routing
                 Title = article.Title,
-                Description = article.Summary, // Maps Summary to Description
-                Content = article.Content, // Articles actually have a Content body to map!
+                Description = article.Summary,
+                Content = article.Content,
                 Author = article.Author,
-                Category = "", // Articles belong to issues, not categories directly in this model
+                Category = "",
                 Publisher = "",
                 Language = "",
-                // Split comma-separated keywords string into a List<string> for Elasticsearch
                 Keywords = string.IsNullOrWhiteSpace(article.Keywords)
                     ? new List<string>()
                     : article.Keywords.Split(',').Select(k => k.Trim()).ToList(),
-                PublicationDate = DateTime.UtcNow, // Fallback if issues handle dates
+                PublicationDate = DateTime.UtcNow,
                 ContentType = "Article"
             };
 
-            // 5. Index the document
             await _elasticService.IndexDocumentAsync(searchDoc);
 
             return article;
@@ -96,7 +91,6 @@ namespace Torath.Services
             var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
             if (article == null) throw new Exception($"Article with ID {id} not found.");
 
-            // 6. Update SQL
             article.Title = request.Title;
             article.Summary = request.Summary;
             article.Content = request.Content;
@@ -109,11 +103,11 @@ namespace Torath.Services
             _articleRepository.Update(article);
             await _articleRepository.SaveChangesAsync(cancellationToken);
 
-            // 7. Sync update to Elasticsearch
             var searchDoc = new SearchDocument
             {
                 Id = $"Article_{article.Id}",
                 OriginalId = article.Id,
+                DatabaseId = article.Id, // Mapped for frontend routing
                 Title = article.Title,
                 Description = article.Summary,
                 Content = article.Content,
@@ -136,11 +130,8 @@ namespace Torath.Services
             var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
             if (article != null)
             {
-                // 8. Delete from SQL
                 _articleRepository.Delete(article);
                 await _articleRepository.SaveChangesAsync(cancellationToken);
-
-                // 9. Delete from Elasticsearch
                 await _elasticService.DeleteDocumentAsync($"Article_{id}");
             }
         }

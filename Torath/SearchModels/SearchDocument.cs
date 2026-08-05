@@ -12,6 +12,9 @@ namespace Torath.SearchModels
         // The SQL Database ID, in case we need to fetch the original record later
         public int OriginalId { get; set; }
 
+        // Added specifically for frontend routing
+        public int DatabaseId { get; set; }
+
         // Required fields mapped directly from your Section 6 guidelines
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
