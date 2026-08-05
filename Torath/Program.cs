@@ -118,6 +118,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+app.UseCors("AllowFrontend");
 
 // 3. Security (These MUST be exactly in this order)
 app.UseAuthentication(); // "Who are you? Do you have a token?"

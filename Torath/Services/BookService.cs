@@ -26,7 +26,8 @@ namespace Torath.Services
 
         public async Task<object> GetAllAsync(int page, int pageSize, string? category, string? language, CancellationToken cancellationToken)
         {
-            var query = _bookRepository.GetQueryable();
+            // FIX: Added .Include(b => b.Category) so Entity Framework joins the table
+            var query = _bookRepository.GetQueryable().Include(b => b.Category).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(category))
             {
@@ -49,7 +50,10 @@ namespace Torath.Services
 
         public async Task<Book?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _bookRepository.GetByIdAsync(id, cancellationToken);
+            // FIX: Swapped to GetQueryable so we can Include the Category before hitting the DB
+            return await _bookRepository.GetQueryable()
+                                        .Include(b => b.Category)
+                                        .SingleOrDefaultAsync(b => b.Id == id, cancellationToken);
         }
 
         public async Task<Book> CreateAsync(BookWriteDto request, CancellationToken cancellationToken)
