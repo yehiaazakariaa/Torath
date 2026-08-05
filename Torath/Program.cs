@@ -8,12 +8,23 @@ using Torath;
 using Torath.Middleware;
 using Torath.Repositories;
 using Torath.Services;
-using Elastic.Clients.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Add Controllers
 builder.Services.AddControllers();
+
+// ---> FIX 1: ADD CORS POLICY <---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // Covers Vite and standard React ports
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 // 2. Configure Database Context (SQL Server)
 builder.Services.AddDbContext<TorathDbContext>(options =>
@@ -21,10 +32,9 @@ builder.Services.AddDbContext<TorathDbContext>(options =>
 
 // 3. Dependency Injection (Registering your Services)
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>(); // Added Categories!
-
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBookService, BookService>();
-builder.Services.AddScoped<IResearchPaperService, ResearchPaperService>(); 
+builder.Services.AddScoped<IResearchPaperService, ResearchPaperService>();
 builder.Services.AddScoped<IMagazineService, MagazineService>();
 builder.Services.AddScoped<INewspaperIssueService, NewspaperIssueService>();
 builder.Services.AddHttpContextAccessor();
@@ -32,9 +42,9 @@ builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INewspaperService, NewspaperService>();
 builder.Services.AddScoped<IMagazineIssueService, MagazineIssueService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
+
 // This single line registers the repository for EVERY entity automatically!
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
 
 // 4. Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -58,7 +68,6 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Torath API", Version = "v1" });
 
-    // This creates the "Authorize" button in Swagger
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -85,19 +94,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
-
-
-// 1. Grab the URL from appsettings
+// 6. Configure Elasticsearch
 var elasticUri = builder.Configuration["Elasticsearch:Uri"];
-
-// 2. Configure the client
 var settings = new ElasticsearchClientSettings(new Uri(elasticUri))
-    .DefaultIndex("torath-searchable-content"); // The default index we created
+    .DefaultIndex("torath-searchable-content");
 
 var elasticClient = new ElasticsearchClient(settings);
-
-// 3. Register the Client and your new Service into the Dependency Injection container
 builder.Services.AddSingleton(elasticClient);
 builder.Services.AddScoped<Torath.Services.IElasticSearchService, Torath.Services.ElasticSearchService>();
 
@@ -105,10 +107,10 @@ var app = builder.Build();
 
 // --- THE MIDDLEWARE PIPELINE ---
 
-// 1. Error Handling (Catches crashes before they reach the user)
+// 1. Error Handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// 2. Swagger UI (Only in Development)
+// 2. Swagger UI
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -116,13 +118,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
+
+// ---> CORS IS APPLIED HERE <---
 app.UseCors("AllowFrontend");
 
-// 3. Security (These MUST be exactly in this order)
-app.UseAuthentication(); // "Who are you? Do you have a token?"
-app.UseAuthorization();  // "Are you allowed to be here?"
+// 3. Security (Order matters)
+app.UseAuthentication();
+app.UseAuthorization();
 
 // 4. Map the API Routes
 app.MapControllers();

@@ -13,7 +13,7 @@ namespace Torath.Controllers
 {
     [Route("api/admin/search-index")]
     [ApiController]
-    [Authorize(Roles = "Admin")] // RESTRICTED EXCLUSIVELY TO ADMINS
+    [Authorize(Roles = "Admin")]
     public class AdminSearchController : ControllerBase
     {
         private readonly TorathDbContext _context;
@@ -34,6 +34,8 @@ namespace Torath.Controllers
             var books = await _context.Books.Select(b => new SearchDocument
             {
                 Id = $"Book_{b.Id}",
+                OriginalId = b.Id,
+                DatabaseId = b.Id,
                 Title = b.Title,
                 Description = b.Description,
                 Content = "",
@@ -48,6 +50,8 @@ namespace Torath.Controllers
             var articles = await _context.Articles.Select(a => new SearchDocument
             {
                 Id = $"Article_{a.Id}",
+                OriginalId = a.Id,
+                DatabaseId = a.Id,
                 Title = a.Title,
                 Description = "",
                 Content = "",
@@ -62,6 +66,8 @@ namespace Torath.Controllers
             var papers = await _context.ResearchPapers.Select(p => new SearchDocument
             {
                 Id = $"ResearchPaper_{p.Id}",
+                OriginalId = p.Id,
+                DatabaseId = p.Id,
                 Title = p.Title,
                 Description = p.Description,
                 Content = "",
@@ -76,6 +82,8 @@ namespace Torath.Controllers
             var magazines = await _context.Magazines.Select(m => new SearchDocument
             {
                 Id = $"Magazine_{m.Id}",
+                OriginalId = m.Id,
+                DatabaseId = m.Id,
                 Title = m.Title,
                 Description = "",
                 Content = "",
@@ -90,6 +98,8 @@ namespace Torath.Controllers
             var newspapers = await _context.Newspapers.Select(n => new SearchDocument
             {
                 Id = $"Newspaper_{n.Id}",
+                OriginalId = n.Id,
+                DatabaseId = n.Id,
                 Title = n.Title,
                 Description = "",
                 Content = "",
@@ -112,6 +122,8 @@ namespace Torath.Controllers
             var books = await _context.Books.Select(b => new SearchDocument
             {
                 Id = $"Book_{b.Id}",
+                OriginalId = b.Id,
+                DatabaseId = b.Id,
                 Title = b.Title,
                 Description = b.Description,
                 Content = "",
@@ -133,6 +145,8 @@ namespace Torath.Controllers
             var articles = await _context.Articles.Select(a => new SearchDocument
             {
                 Id = $"Article_{a.Id}",
+                OriginalId = a.Id,
+                DatabaseId = a.Id,
                 Title = a.Title,
                 Description = "",
                 Content = "",
@@ -154,6 +168,8 @@ namespace Torath.Controllers
             var papers = await _context.ResearchPapers.Select(p => new SearchDocument
             {
                 Id = $"ResearchPaper_{p.Id}",
+                OriginalId = p.Id,
+                DatabaseId = p.Id,
                 Title = p.Title,
                 Description = p.Description,
                 Content = "",
@@ -175,6 +191,8 @@ namespace Torath.Controllers
             var magazines = await _context.Magazines.Select(m => new SearchDocument
             {
                 Id = $"Magazine_{m.Id}",
+                OriginalId = m.Id,
+                DatabaseId = m.Id,
                 Title = m.Title,
                 Description = "",
                 Content = "",
@@ -196,6 +214,8 @@ namespace Torath.Controllers
             var newspapers = await _context.Newspapers.Select(n => new SearchDocument
             {
                 Id = $"Newspaper_{n.Id}",
+                OriginalId = n.Id,
+                DatabaseId = n.Id,
                 Title = n.Title,
                 Description = "",
                 Content = "",

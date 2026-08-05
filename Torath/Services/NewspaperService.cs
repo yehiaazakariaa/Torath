@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Torath.Entities;
 using Torath.DTOs;
 using Torath.Repositories;
-using Torath.SearchModels; // 1. Added for SearchDocument
+using Torath.SearchModels;
 
 namespace Torath.Services
 {
@@ -15,8 +15,6 @@ namespace Torath.Services
     {
         private readonly IRepository<Newspaper> _newspaperRepository;
         private readonly IRepository<NewspaperIssue> _issueRepository;
-
-        // 2. Inject Elasticsearch Service
         private readonly IElasticSearchService _elasticService;
 
         public NewspaperService(IRepository<Newspaper> newspaperRepository, IRepository<NewspaperIssue> issueRepository, IElasticSearchService elasticService)
@@ -28,7 +26,9 @@ namespace Torath.Services
 
         public async Task<object> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var query = _newspaperRepository.GetQueryable();
+            // Included Category to prevent null reference on the frontend
+            var query = _newspaperRepository.GetQueryable().Include(n => n.Category);
+
             var totalRecords = await query.CountAsync(cancellationToken);
             var data = await query
                 .Skip((page - 1) * pageSize)
@@ -40,7 +40,9 @@ namespace Torath.Services
 
         public async Task<Newspaper?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _newspaperRepository.GetByIdAsync(id, cancellationToken);
+            return await _newspaperRepository.GetQueryable()
+                .Include(n => n.Category)
+                .FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
         }
 
         public async Task<IEnumerable<NewspaperIssue>> GetIssuesByNewspaperIdAsync(int newspaperId, CancellationToken cancellationToken)
@@ -52,7 +54,6 @@ namespace Torath.Services
 
         public async Task<Newspaper> CreateAsync(NewspaperWriteDto request, CancellationToken cancellationToken)
         {
-            // 3. Save to SQL Server
             var newspaper = new Newspaper
             {
                 Title = request.Title,
@@ -69,24 +70,23 @@ namespace Torath.Services
             await _newspaperRepository.AddAsync(newspaper, cancellationToken);
             await _newspaperRepository.SaveChangesAsync(cancellationToken);
 
-            // 4. Map to Elasticsearch Document
             var searchDoc = new SearchDocument
             {
-                Id = $"Newspaper_{newspaper.Id}", // Unique ID for Newspapers
+                Id = $"Newspaper_{newspaper.Id}",
                 OriginalId = newspaper.Id,
+                DatabaseId = newspaper.Id, // Mapped for frontend
                 Title = newspaper.Title,
                 Description = newspaper.Description,
-                Content = "", // No massive raw text body typically stored here
-                Author = "", // Newspapers generally use 'Publisher' rather than a single 'Author'
+                Content = "",
+                Author = "",
                 Category = newspaper.CategoryId.ToString(),
                 Publisher = newspaper.Publisher,
                 Language = newspaper.Language,
                 Keywords = new List<string>(),
                 PublicationDate = newspaper.PublicationDate,
-                ContentType = "Newspaper" // Tag for search filtering
+                ContentType = "Newspaper"
             };
 
-            // 5. Index the document
             await _elasticService.IndexDocumentAsync(searchDoc);
 
             return newspaper;
@@ -97,7 +97,6 @@ namespace Torath.Services
             var newspaper = await _newspaperRepository.GetByIdAsync(id, cancellationToken);
             if (newspaper == null) throw new Exception($"Newspaper with ID {id} not found.");
 
-            // 6. Update SQL
             newspaper.Title = request.Title;
             newspaper.Description = request.Description;
             newspaper.Language = request.Language;
@@ -111,11 +110,11 @@ namespace Torath.Services
             _newspaperRepository.Update(newspaper);
             await _newspaperRepository.SaveChangesAsync(cancellationToken);
 
-            // 7. Sync update to Elasticsearch
             var searchDoc = new SearchDocument
             {
                 Id = $"Newspaper_{newspaper.Id}",
                 OriginalId = newspaper.Id,
+                DatabaseId = newspaper.Id, // Mapped for frontend
                 Title = newspaper.Title,
                 Description = newspaper.Description,
                 Content = "",
@@ -136,11 +135,8 @@ namespace Torath.Services
             var newspaper = await _newspaperRepository.GetByIdAsync(id, cancellationToken);
             if (newspaper != null)
             {
-                // 8. Delete from SQL
                 _newspaperRepository.Delete(newspaper);
                 await _newspaperRepository.SaveChangesAsync(cancellationToken);
-
-                // 9. Delete from Elasticsearch
                 await _elasticService.DeleteDocumentAsync($"Newspaper_{id}");
             }
         }
