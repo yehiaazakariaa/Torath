@@ -12,9 +12,11 @@
         // --- Foreign Key (Belongs to ONE Magazine) ---
         public int MagazineId { get; set; }
         public Magazine Magazine { get; set; } = null!;
+        public double Rating { get; set; } = 0;
+        public int ViewCount { get; set; } = 0;
 
         // --- Navigation Property (Has MANY Articles) ---
-  // "An issue can contain multiple articles"[cite: 67].
+        // "An issue can contain multiple articles"[cite: 67].
         public ICollection<Article> Articles { get; set; } = new List<Article>();
     }
 }

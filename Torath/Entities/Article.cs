@@ -12,6 +12,8 @@
         public string Keywords { get; set; } = string.Empty;
         public string? CoverImageUrl { get; set; }
         public string? PdfFileUrl { get; set; }
+        public double Rating { get; set; } = 0;
+        public int ViewCount { get; set; } = 0;
 
         // --- Foreign Keys ---
         // Because an article might belong to a Magazine OR a Newspaper, we make these integers 

@@ -12,6 +12,8 @@
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
         public string ISSN { get; set; } = string.Empty;
+        public double Rating { get; set; }
+        public int ViewCount { get; set; }
     }
 
     // Notice we removed the extra "namespace Torath.DTOs {" that was wrapping this class
@@ -39,5 +41,7 @@
         public string VolumeNumber { get; set; } = string.Empty;
         public DateTime PublicationDate { get; set; }
         public int MagazineId { get; set; }
+        public double Rating { get; set; }
+        public int ViewCount { get; set; }
     }
 }

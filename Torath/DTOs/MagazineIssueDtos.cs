@@ -1,4 +1,6 @@
-﻿namespace Torath.DTOs
+﻿using System;
+
+namespace Torath.DTOs
 {
     // This defines the exact JSON payload the user must send in POST and PUT requests
     public class MagazineIssueWriteDto
@@ -10,4 +12,7 @@
         // CRITICAL: This links the issue to its parent Magazine
         public int MagazineId { get; set; }
     }
+
+    
+   
 }

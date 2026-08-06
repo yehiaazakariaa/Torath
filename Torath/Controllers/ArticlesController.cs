@@ -31,7 +31,10 @@ namespace Torath.Controllers
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
         {
             var article = await _articleService.GetByIdAsync(id, cancellationToken);
-            if (article == null) return NotFound();
+            if (article == null)
+            {
+                return NotFound();
+            }
             return Ok(article);
         }
 

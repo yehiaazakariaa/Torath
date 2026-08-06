@@ -11,6 +11,8 @@
         // --- Foreign Key (Belongs to ONE Newspaper) ---
         public int NewspaperId { get; set; }
         public Newspaper Newspaper { get; set; } = null!;
+        public double Rating { get; set; } = 0;
+        public int ViewCount { get; set; } = 0;
 
         // --- Navigation Property (Has MANY Articles) ---
         public ICollection<Article> Articles { get; set; } = new List<Article>();

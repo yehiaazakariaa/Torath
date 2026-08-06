@@ -41,19 +41,51 @@ namespace Torath.Services
                 .OrderByDescending(b => b.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(b => new BookDto
+                {
+                    Id = b.Id,
+                    Title = b.Title,
+                    Description = b.Description,
+                    Language = b.Language,
+                    Publisher = b.Publisher,
+                    PublicationYear = b.PublicationDate.Year,
+                    CategoryId = b.CategoryId,
+                    CategoryName = b.Category != null ? b.Category.Name : string.Empty,
+                    CoverImageUrl = b.CoverImageUrl,
+                    PdfFileUrl = b.PdfFileUrl,
+                    Rating = b.Rating,
+                    ViewCount = b.ViewCount
+                })
                 .ToListAsync(cancellationToken);
 
             return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<Book?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<BookDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _bookRepository.GetQueryable()
+            var b = await _bookRepository.GetQueryable()
                                         .Include(b => b.Category)
                                         .SingleOrDefaultAsync(b => b.Id == id, cancellationToken);
+            if (b == null) return null;
+
+            return new BookDto
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Description = b.Description,
+                Language = b.Language,
+                Publisher = b.Publisher,
+                PublicationYear = b.PublicationDate.Year,
+                CategoryId = b.CategoryId,
+                CategoryName = b.Category != null ? b.Category.Name : string.Empty,
+                CoverImageUrl = b.CoverImageUrl,
+                PdfFileUrl = b.PdfFileUrl,
+                Rating = b.Rating,
+                ViewCount = b.ViewCount
+            };
         }
 
-        public async Task<Book> CreateAsync(BookWriteDto request, CancellationToken cancellationToken)
+        public async Task<BookDto> CreateAsync(BookWriteDto request, CancellationToken cancellationToken)
         {
             var book = new Book
             {
@@ -66,7 +98,9 @@ namespace Torath.Services
                 ISBN = request.ISBN,
                 Authors = request.Authors,
                 NumberOfPages = request.NumberOfPages,
-                Edition = request.Edition
+                Edition = request.Edition,
+                CoverImageUrl = request.CoverImageUrl,
+                PdfFileUrl = request.PdfFileUrl
             };
 
             await _bookRepository.AddAsync(book, cancellationToken);
@@ -76,7 +110,7 @@ namespace Torath.Services
             {
                 Id = $"Book_{book.Id}",
                 OriginalId = book.Id,
-                DatabaseId = book.Id, // Mapped for frontend routing
+                DatabaseId = book.Id,
                 Title = book.Title,
                 Description = book.Description,
                 Content = "",
@@ -91,7 +125,7 @@ namespace Torath.Services
 
             await _elasticService.IndexDocumentAsync(searchDoc);
 
-            return book;
+            return await GetByIdAsync(book.Id, cancellationToken) ?? throw new Exception("Failed to return created book.");
         }
 
         public async Task UpdateAsync(int id, BookWriteDto request, CancellationToken cancellationToken)
@@ -109,6 +143,8 @@ namespace Torath.Services
             book.Authors = request.Authors;
             book.NumberOfPages = request.NumberOfPages;
             book.Edition = request.Edition;
+            book.CoverImageUrl = request.CoverImageUrl;
+            book.PdfFileUrl = request.PdfFileUrl;
 
             _bookRepository.Update(book);
             await _bookRepository.SaveChangesAsync(cancellationToken);
@@ -117,7 +153,7 @@ namespace Torath.Services
             {
                 Id = $"Book_{book.Id}",
                 OriginalId = book.Id,
-                DatabaseId = book.Id, // Mapped for frontend routing
+                DatabaseId = book.Id,
                 Title = book.Title,
                 Description = book.Description,
                 Content = "",

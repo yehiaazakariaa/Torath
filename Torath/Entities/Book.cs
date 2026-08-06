@@ -9,6 +9,8 @@
         public int NumberOfPages { get; set; }
         public string Edition { get; set; } = string.Empty;
         public int PublicationYear { get; set; }
+        public double Rating { get; set; } = 0;
+        public int ViewCount { get; set; } = 0;
 
         public string? CoverImageUrl { get; set; }
         public string? PdfFileUrl { get; set; }

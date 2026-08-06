@@ -14,7 +14,8 @@ namespace Torath.DTOs
         public int PublicationYear { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
-
+        public double Rating { get; set; }
+        public int ViewCount { get; set; }
         // New Media Properties
         public string? CoverImageUrl { get; set; }
         public string? PdfFileUrl { get; set; }
@@ -42,6 +43,8 @@ namespace Torath.DTOs
 
         [Required]
         public int CategoryId { get; set; }
+        public string? CoverImageUrl { get; set; }
+        public string? PdfFileUrl { get; set; }
 
         // Book-Specific Properties
         [Required(ErrorMessage = "ISBN is required.")]
@@ -68,6 +71,8 @@ namespace Torath.DTOs
         public int PublicationYear { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
+        public double Rating { get; set; }
+        public int ViewCount { get; set; }
 
         // New Media Properties
         public string? CoverImageUrl { get; set; }

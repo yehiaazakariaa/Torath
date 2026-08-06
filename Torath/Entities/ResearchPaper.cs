@@ -17,6 +17,8 @@
 
         public string? CoverImageUrl { get; set; }
         public string? PdfFileUrl { get; set; }
+        public double Rating { get; set; } = 0;
+        public int ViewCount { get; set; } = 0;
 
     }
 }

@@ -36,17 +36,51 @@ namespace Torath.Services
                 .OrderByDescending(a => a.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(a => new ArticleDto
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Summary = a.Summary,
+                    Content = a.Content,
+                    Author = a.Author,
+                    PageNumber = a.PageNumber,
+                    Keywords = a.Keywords,
+                    CoverImageUrl = a.CoverImageUrl,
+                    PdfFileUrl = a.PdfFileUrl,
+                    MagazineIssueId = a.MagazineIssueId,
+                    NewspaperIssueId = a.NewspaperIssueId,
+                    Rating = a.Rating,
+                    ViewCount = a.ViewCount
+                })
                 .ToListAsync(cancellationToken);
 
             return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<Article> GetByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<ArticleDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _articleRepository.GetByIdAsync(id, cancellationToken);
+            var a = await _articleRepository.GetByIdAsync(id, cancellationToken);
+            if (a == null) return null;
+
+            return new ArticleDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Summary = a.Summary,
+                Content = a.Content,
+                Author = a.Author,
+                PageNumber = a.PageNumber,
+                Keywords = a.Keywords,
+                CoverImageUrl = a.CoverImageUrl,
+                PdfFileUrl = a.PdfFileUrl,
+                MagazineIssueId = a.MagazineIssueId,
+                NewspaperIssueId = a.NewspaperIssueId,
+                Rating = a.Rating,
+                ViewCount = a.ViewCount
+            };
         }
 
-        public async Task<Article> CreateAsync(ArticleWriteDto request, CancellationToken cancellationToken)
+        public async Task<ArticleDto> CreateAsync(ArticleWriteDto request, CancellationToken cancellationToken)
         {
             var article = new Article
             {
@@ -58,9 +92,8 @@ namespace Torath.Services
                 Keywords = request.Keywords,
                 MagazineIssueId = request.MagazineIssueId,
                 NewspaperIssueId = request.NewspaperIssueId,
-                CoverImageUrl = request.CoverImageUrl, 
+                CoverImageUrl = request.CoverImageUrl,
                 PdfFileUrl = request.PdfFileUrl
-
             };
 
             await _articleRepository.AddAsync(article, cancellationToken);
@@ -70,7 +103,7 @@ namespace Torath.Services
             {
                 Id = $"Article_{article.Id}",
                 OriginalId = article.Id,
-                DatabaseId = article.Id, // Mapped for frontend routing
+                DatabaseId = article.Id,
                 Title = article.Title,
                 Description = article.Summary,
                 Content = article.Content,
@@ -87,7 +120,7 @@ namespace Torath.Services
 
             await _elasticService.IndexDocumentAsync(searchDoc);
 
-            return article;
+            return await GetByIdAsync(article.Id, cancellationToken) ?? throw new Exception("Failed to return created article.");
         }
 
         public async Task UpdateAsync(int id, ArticleWriteDto request, CancellationToken cancellationToken)
@@ -103,7 +136,7 @@ namespace Torath.Services
             article.Keywords = request.Keywords;
             article.MagazineIssueId = request.MagazineIssueId;
             article.NewspaperIssueId = request.NewspaperIssueId;
-            article.CoverImageUrl = request.CoverImageUrl; 
+            article.CoverImageUrl = request.CoverImageUrl;
             article.PdfFileUrl = request.PdfFileUrl;
 
             _articleRepository.Update(article);
@@ -113,7 +146,7 @@ namespace Torath.Services
             {
                 Id = $"Article_{article.Id}",
                 OriginalId = article.Id,
-                DatabaseId = article.Id, // Mapped for frontend routing
+                DatabaseId = article.Id,
                 Title = article.Title,
                 Description = article.Summary,
                 Content = article.Content,
