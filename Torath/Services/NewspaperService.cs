@@ -26,33 +26,69 @@ namespace Torath.Services
 
         public async Task<object> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            // Included Category to prevent null reference on the frontend
             var query = _newspaperRepository.GetQueryable().Include(n => n.Category);
 
             var totalRecords = await query.CountAsync(cancellationToken);
             var data = await query
+                .OrderByDescending(n => n.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(n => new NewspaperReadDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Publisher = n.Publisher,
+                    Frequency = n.Frequency,
+                    Price = n.Price,
+                    Language = n.Language,
+                    CategoryId = n.CategoryId,
+                    PdfFilePath = n.PdfFilePath,
+                    Rating = n.Rating,
+                    ViewCount = n.ViewCount
+                })
                 .ToListAsync(cancellationToken);
 
             return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<Newspaper?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<NewspaperReadDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _newspaperRepository.GetQueryable()
-                .Include(n => n.Category)
-                .FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
+            var n = await _newspaperRepository.GetQueryable()
+                .Include(nw => nw.Category)
+                .FirstOrDefaultAsync(nw => nw.Id == id, cancellationToken);
+            if (n == null) return null;
+
+            return new NewspaperReadDto
+            {
+                Title = n.Title,
+                Publisher = n.Publisher,
+                Frequency = n.Frequency,
+                Price = n.Price,
+                Language = n.Language,
+                CategoryId = n.CategoryId,
+                PdfFilePath = n.PdfFilePath,
+                Rating = n.Rating,
+                ViewCount = n.ViewCount
+            };
         }
 
-        public async Task<IEnumerable<NewspaperIssue>> GetIssuesByNewspaperIdAsync(int newspaperId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<NewspaperIssueDto>> GetIssuesByNewspaperIdAsync(int newspaperId, CancellationToken cancellationToken)
         {
             return await _issueRepository.GetQueryable()
                 .Where(i => i.NewspaperId == newspaperId)
+                .Select(i => new NewspaperIssueDto
+                {
+                    Id = i.Id,
+                    IssueNumber = i.IssueNumber,
+                    PublicationDate = i.PublicationDate,
+                    NewspaperId = i.NewspaperId,
+                    Rating = i.Rating,
+                    ViewCount = i.ViewCount
+                })
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<Newspaper> CreateAsync(NewspaperWriteDto request, CancellationToken cancellationToken)
+        public async Task<NewspaperReadDto> CreateAsync(NewspaperWriteDto request, CancellationToken cancellationToken)
         {
             var newspaper = new Newspaper
             {
@@ -75,7 +111,7 @@ namespace Torath.Services
             {
                 Id = $"Newspaper_{newspaper.Id}",
                 OriginalId = newspaper.Id,
-                DatabaseId = newspaper.Id, // Mapped for frontend
+                DatabaseId = newspaper.Id,
                 Title = newspaper.Title,
                 Description = newspaper.Description,
                 Content = "",
@@ -90,7 +126,7 @@ namespace Torath.Services
 
             await _elasticService.IndexDocumentAsync(searchDoc);
 
-            return newspaper;
+            return await GetByIdAsync(newspaper.Id, cancellationToken) ?? throw new Exception("Failed to return created newspaper.");
         }
 
         public async Task UpdateAsync(int id, NewspaperWriteDto request, CancellationToken cancellationToken)
@@ -116,7 +152,7 @@ namespace Torath.Services
             {
                 Id = $"Newspaper_{newspaper.Id}",
                 OriginalId = newspaper.Id,
-                DatabaseId = newspaper.Id, // Mapped for frontend
+                DatabaseId = newspaper.Id,
                 Title = newspaper.Title,
                 Description = newspaper.Description,
                 Content = "",

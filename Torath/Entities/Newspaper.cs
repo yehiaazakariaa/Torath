@@ -10,6 +10,8 @@ namespace Torath.Entities
         public string Frequency { get; set; }
         [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
+        public double Rating { get; set; } = 0;
+        public int ViewCount { get; set; } = 0;
         public string? PdfFilePath { get; set; }
         public string? CoverImageUrl { get; set; }
         public ICollection<NewspaperIssue> Issues { get; set; } = new List<NewspaperIssue>();

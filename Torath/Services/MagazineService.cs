@@ -26,7 +26,6 @@ namespace Torath.Services
 
         public async Task<object> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            // Included Category to prevent null reference on the frontend
             var query = _magazineRepository.GetQueryable().Include(m => m.Category);
 
             var totalRecords = await query.CountAsync(cancellationToken);
@@ -34,27 +33,66 @@ namespace Torath.Services
                 .OrderByDescending(m => m.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(m => new MagazineDto
+                {
+                    Id = m.Id,
+                    Title = m.Title,
+                    Description = m.Description,
+                    Language = m.Language,
+                    Publisher = m.Publisher,
+                    PublicationDate = m.PublicationDate,
+                    CategoryId = m.CategoryId,
+                    CategoryName = m.Category != null ? m.Category.Name : string.Empty,
+                    ISSN = m.ISSN,
+                    Rating = m.Rating,
+                    ViewCount = m.ViewCount
+                })
                 .ToListAsync(cancellationToken);
-
 
             return new { data, totalRecords, pageNumber = page, pageSize };
         }
 
-        public async Task<Magazine?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<MagazineDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await _magazineRepository.GetQueryable()
-                .Include(m => m.Category)
-                .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+            var m = await _magazineRepository.GetQueryable()
+                .Include(mg => mg.Category)
+                .FirstOrDefaultAsync(mg => mg.Id == id, cancellationToken);
+            if (m == null) return null;
+
+            return new MagazineDto
+            {
+                Id = m.Id,
+                Title = m.Title,
+                Description = m.Description,
+                Language = m.Language,
+                Publisher = m.Publisher,
+                PublicationDate = m.PublicationDate,
+                CategoryId = m.CategoryId,
+                CategoryName = m.Category != null ? m.Category.Name : string.Empty,
+                ISSN = m.ISSN,
+                Rating = m.Rating,
+                ViewCount = m.ViewCount
+            };
         }
 
-        public async Task<IEnumerable<MagazineIssue>> GetIssuesByMagazineIdAsync(int magazineId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<MagazineIssueDto>> GetIssuesByMagazineIdAsync(int magazineId, CancellationToken cancellationToken)
         {
             return await _issueRepository.GetQueryable()
                 .Where(i => i.MagazineId == magazineId)
+                .Select(i => new MagazineIssueDto
+                {
+                    Id = i.Id,
+                    IssueNumber = i.IssueNumber,
+                    VolumeNumber = i.VolumeNumber,
+                    PublicationDate = i.PublicationDate,
+                    MagazineId = i.MagazineId,
+                    Rating = i.Rating,
+                    ViewCount = i.ViewCount
+                })
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<Magazine> CreateAsync(MagazineWriteDto request, CancellationToken cancellationToken)
+        public async Task<MagazineDto> CreateAsync(MagazineWriteDto request, CancellationToken cancellationToken)
         {
             var magazine = new Magazine
             {
@@ -65,7 +103,7 @@ namespace Torath.Services
                 Publisher = request.Publisher,
                 CategoryId = request.CategoryId,
                 ISSN = request.ISSN,
-                CoverImageUrl = request.CoverImageUrl, // <--- ADD THIS LINE
+                CoverImageUrl = request.CoverImageUrl,
                 PdfFileUrl = request.PdfFileUrl
             };
 
@@ -76,7 +114,7 @@ namespace Torath.Services
             {
                 Id = $"Magazine_{magazine.Id}",
                 OriginalId = magazine.Id,
-                DatabaseId = magazine.Id, // Mapped for frontend
+                DatabaseId = magazine.Id,
                 Title = magazine.Title,
                 Description = magazine.Description,
                 Content = "",
@@ -91,7 +129,7 @@ namespace Torath.Services
 
             await _elasticService.IndexDocumentAsync(searchDoc);
 
-            return magazine;
+            return await GetByIdAsync(magazine.Id, cancellationToken) ?? throw new Exception("Failed to return created magazine.");
         }
 
         public async Task UpdateAsync(int id, MagazineWriteDto request, CancellationToken cancellationToken)
@@ -106,7 +144,7 @@ namespace Torath.Services
             magazine.Publisher = request.Publisher;
             magazine.CategoryId = request.CategoryId;
             magazine.ISSN = request.ISSN;
-            magazine.CoverImageUrl = request.CoverImageUrl; 
+            magazine.CoverImageUrl = request.CoverImageUrl;
             magazine.PdfFileUrl = request.PdfFileUrl;
 
             _magazineRepository.Update(magazine);
@@ -116,7 +154,7 @@ namespace Torath.Services
             {
                 Id = $"Magazine_{magazine.Id}",
                 OriginalId = magazine.Id,
-                DatabaseId = magazine.Id, // Mapped for frontend
+                DatabaseId = magazine.Id,
                 Title = magazine.Title,
                 Description = magazine.Description,
                 Content = "",
