@@ -8,7 +8,8 @@ public class Magazine : BaseContent
 
     public string ISSN { get; set; } = string.Empty;
 
-
+    public string? CoverImageUrl { get; set; }
+    public string? PdfFileUrl { get; set; }
 
     // --- Relational Navigation ---
 

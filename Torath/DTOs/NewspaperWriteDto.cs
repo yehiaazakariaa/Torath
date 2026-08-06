@@ -16,5 +16,6 @@ namespace Torath.DTOs
         public string Frequency { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string PdfFilePath { get; set; } = string.Empty;
+        public string? CoverImageUrl { get; set; }
     }
 }

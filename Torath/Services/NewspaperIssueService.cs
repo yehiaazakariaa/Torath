@@ -25,6 +25,7 @@ namespace Torath.Services
 
             // 2. Fetch only the requested page of data
             var data = await _context.NewspaperIssues
+                .OrderByDescending(x => x.Id)
                 .Skip((page - 1) * pageSize) // Skips the records from previous pages
                 .Take(pageSize)              // Takes only the amount specified by pageSize
                 .ToListAsync();              // Executes the SQL query

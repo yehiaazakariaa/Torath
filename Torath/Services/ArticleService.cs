@@ -33,6 +33,7 @@ namespace Torath.Services
 
             var totalRecords = await query.CountAsync(cancellationToken);
             var data = await query
+                .OrderByDescending(a => a.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -56,7 +57,10 @@ namespace Torath.Services
                 PageNumber = request.PageNumber,
                 Keywords = request.Keywords,
                 MagazineIssueId = request.MagazineIssueId,
-                NewspaperIssueId = request.NewspaperIssueId
+                NewspaperIssueId = request.NewspaperIssueId,
+                CoverImageUrl = request.CoverImageUrl, 
+                PdfFileUrl = request.PdfFileUrl
+
             };
 
             await _articleRepository.AddAsync(article, cancellationToken);
@@ -99,6 +103,8 @@ namespace Torath.Services
             article.Keywords = request.Keywords;
             article.MagazineIssueId = request.MagazineIssueId;
             article.NewspaperIssueId = request.NewspaperIssueId;
+            article.CoverImageUrl = request.CoverImageUrl; 
+            article.PdfFileUrl = request.PdfFileUrl;
 
             _articleRepository.Update(article);
             await _articleRepository.SaveChangesAsync(cancellationToken);

@@ -38,6 +38,7 @@ namespace Torath.Services
 
             var totalRecords = await query.CountAsync(cancellationToken);
             var data = await query
+                .OrderByDescending(b => b.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);

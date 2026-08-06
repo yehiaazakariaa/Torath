@@ -10,6 +10,8 @@
         public string Author { get; set; } = string.Empty;
         public int PageNumber { get; set; }
         public string Keywords { get; set; } = string.Empty;
+        public string? CoverImageUrl { get; set; }
+        public string? PdfFileUrl { get; set; }
 
         // --- Foreign Keys ---
         // Because an article might belong to a Magazine OR a Newspaper, we make these integers 

@@ -64,7 +64,8 @@ namespace Torath.Services
                 CategoryId = request.CategoryId,
                 Frequency = request.Frequency,
                 Price = request.Price,
-                PdfFilePath = request.PdfFilePath
+                PdfFilePath = request.PdfFilePath,
+                CoverImageUrl = request.CoverImageUrl
             };
 
             await _newspaperRepository.AddAsync(newspaper, cancellationToken);
@@ -106,6 +107,7 @@ namespace Torath.Services
             newspaper.Frequency = request.Frequency;
             newspaper.Price = request.Price;
             newspaper.PdfFilePath = request.PdfFilePath;
+            newspaper.CoverImageUrl = request.CoverImageUrl;
 
             _newspaperRepository.Update(newspaper);
             await _newspaperRepository.SaveChangesAsync(cancellationToken);
