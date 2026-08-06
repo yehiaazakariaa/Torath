@@ -1,9 +1,11 @@
 ﻿using Moq;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
+using System.Threading.Tasks;
 using Torath.Controllers;
 using Torath.Services;
-using Torath.Entities; // FIX: Added the Entities namespace
+using Torath.DTOs; // FIX: Brought in DTOs namespace instead of Entities
 
 namespace Torath.Tests.Controllers
 {
@@ -24,8 +26,8 @@ namespace Torath.Tests.Controllers
             // Arrange
             var bookId = 4001;
 
-            // FIX: Using the Book entity instead of BookDto
-            var expectedBook = new Book { Id = bookId, Title = "The Golden Age of Egypt" };
+            // FIX: Using BookDto instead of the Book entity
+            var expectedBook = new BookDto { Id = bookId, Title = "The Golden Age of Egypt" };
 
             _bookServiceMock.Setup(s => s.GetByIdAsync(bookId, default))
                             .ReturnsAsync(expectedBook);
@@ -46,9 +48,9 @@ namespace Torath.Tests.Controllers
             // Arrange
             var invalidBookId = 9999;
 
-            // FIX: Casting null to the Book entity
+            // FIX: Casting null to BookDto instead of the Book entity
             _bookServiceMock.Setup(s => s.GetByIdAsync(invalidBookId, default))
-                            .ReturnsAsync((Book)null);
+                            .ReturnsAsync((BookDto?)null);
 
             // Act
             var result = await _booksController.GetById(invalidBookId, default);
@@ -56,7 +58,6 @@ namespace Torath.Tests.Controllers
             // Assert
             result.Should().BeOfType<NotFoundResult>();
         }
-
 
         [Fact]
         public async Task GetAll_ShouldApplyPaginationAndFilters_WhenProvided()
@@ -85,8 +86,5 @@ namespace Torath.Tests.Controllers
                 It.IsAny<CancellationToken>()),
                 Times.Once);
         }
-
-   
-        
     }
 }
