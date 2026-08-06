@@ -11,6 +11,7 @@ namespace Torath.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
         public string? PdfFilePath { get; set; }
+        public string? CoverImageUrl { get; set; }
         public ICollection<NewspaperIssue> Issues { get; set; } = new List<NewspaperIssue>();
     }
 }

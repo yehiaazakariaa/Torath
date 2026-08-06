@@ -24,6 +24,8 @@
         public DateTime PublicationDate { get; set; }
         public string Publisher { get; set; } = string.Empty;
         public int CategoryId { get; set; }
+        public string? CoverImageUrl { get; set; }
+        public string? PdfFileUrl { get; set; }
 
         // Magazine-Specific Information
         public string ISSN { get; set; } = string.Empty;

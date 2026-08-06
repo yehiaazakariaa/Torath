@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Torath;
 
@@ -11,9 +12,11 @@ using Torath;
 namespace Torath.Migrations
 {
     [DbContext(typeof(TorathDbContext))]
-    partial class TorathDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260806105735_AddCoverImageToNewspaper")]
+    partial class AddCoverImageToNewspaper
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,9 +41,6 @@ namespace Torath.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CoverImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Keywords")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -53,9 +53,6 @@ namespace Torath.Migrations
 
                     b.Property<int>("PageNumber")
                         .HasColumnType("int");
-
-                    b.Property<string>("PdfFileUrl")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Summary")
                         .IsRequired()
@@ -250,14 +247,8 @@ namespace Torath.Migrations
                 {
                     b.HasBaseType("Torath.Entities.BaseContent");
 
-                    b.Property<string>("CoverImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ISSN")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PdfFileUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable("Magazines", (string)null);
@@ -298,7 +289,7 @@ namespace Torath.Migrations
                         {
                             Id = 1,
                             CategoryId = 1,
-                            CreatedDate = new DateTime(2026, 8, 6, 11, 43, 55, 986, DateTimeKind.Utc).AddTicks(7062),
+                            CreatedDate = new DateTime(2026, 8, 6, 10, 57, 34, 832, DateTimeKind.Utc).AddTicks(3928),
                             Description = "A Craftsman's Guide to Software Structure",
                             Language = "English",
                             PublicationDate = new DateTime(2017, 9, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),

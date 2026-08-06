@@ -25,6 +25,7 @@ namespace Torath.Services
 
             // Fetch the paginated issues using Skip and Take
             var data = await _context.MagazineIssues
+                .OrderByDescending(x => x.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

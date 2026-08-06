@@ -30,7 +30,7 @@ namespace Torath.Services
                 query = query.Where(rp => rp.PublicationYear == publicationYear.Value);
 
             var totalRecords = await query.CountAsync();
-            var papers = await query.Skip((page - 1) * pageSize).Take(pageSize)
+            var papers = await query.OrderByDescending(rp => rp.Id).Skip((page - 1) * pageSize).Take(pageSize)
                 .Select(rp => new ResearchPaperDto
                 {
                     Id = rp.Id,
