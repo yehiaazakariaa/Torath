@@ -154,6 +154,7 @@ namespace Torath.Services
                 {
                     ContentType = hit.Source?.ContentType,
                     Id = hit.Source?.Id,
+                    DatabaseId = hit.Source.DatabaseId,
                     Title = hit.Source?.Title,
                     Description = hit.Source?.Description,
                     CategoryId = hit.Source?.CategoryId,
