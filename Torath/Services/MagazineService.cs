@@ -45,7 +45,9 @@ namespace Torath.Services
                     CategoryName = m.Category != null ? m.Category.Name : string.Empty,
                     ISSN = m.ISSN,
                     Rating = m.Rating,
-                    ViewCount = m.ViewCount
+                    ViewCount = m.ViewCount,
+                    CoverImageUrl = m.CoverImageUrl,
+                    PdfFileUrl = m.PdfFileUrl,
                 })
                 .ToListAsync(cancellationToken);
 
@@ -71,7 +73,9 @@ namespace Torath.Services
                 CategoryName = m.Category != null ? m.Category.Name : string.Empty,
                 ISSN = m.ISSN,
                 Rating = m.Rating,
-                ViewCount = m.ViewCount
+                ViewCount = m.ViewCount,
+                CoverImageUrl = m.CoverImageUrl,
+                PdfFileUrl = m.PdfFileUrl,
             };
         }
 

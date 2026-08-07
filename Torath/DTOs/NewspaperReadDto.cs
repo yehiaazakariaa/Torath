@@ -13,5 +13,9 @@
         public int ViewCount { get; set; }
         public int CategoryId { get; set; } // Required to prevent the Foreign Key error!
         public string? PdfFilePath { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public DateTime PublicationDate { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
+        public string? CoverImageUrl { get; set; }
     }
 }

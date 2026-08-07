@@ -54,7 +54,12 @@ namespace Torath.Services
                     CoverImageUrl = b.CoverImageUrl,
                     PdfFileUrl = b.PdfFileUrl,
                     Rating = b.Rating,
-                    ViewCount = b.ViewCount
+                    ViewCount = b.ViewCount,
+                    // ADDED FIELDS BELOW
+                    ISBN = b.ISBN,
+                    Authors = b.Authors,
+                    NumberOfPages = b.NumberOfPages,
+                    Edition = b.Edition
                 })
                 .ToListAsync(cancellationToken);
 
@@ -81,7 +86,12 @@ namespace Torath.Services
                 CoverImageUrl = b.CoverImageUrl,
                 PdfFileUrl = b.PdfFileUrl,
                 Rating = b.Rating,
-                ViewCount = b.ViewCount
+                ViewCount = b.ViewCount,
+                // ADDED FIELDS BELOW
+                ISBN = b.ISBN,
+                Authors = b.Authors,
+                NumberOfPages = b.NumberOfPages,
+                Edition = b.Edition
             };
         }
 

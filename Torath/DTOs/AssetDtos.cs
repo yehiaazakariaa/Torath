@@ -16,6 +16,10 @@ namespace Torath.DTOs
         public string CategoryName { get; set; } = string.Empty;
         public double Rating { get; set; }
         public int ViewCount { get; set; }
+        public string ISBN { get; set; } = string.Empty;
+        public string Authors { get; set; } = string.Empty;
+        public int NumberOfPages { get; set; }
+        public string Edition { get; set; } = string.Empty;
         // New Media Properties
         public string? CoverImageUrl { get; set; }
         public string? PdfFileUrl { get; set; }
