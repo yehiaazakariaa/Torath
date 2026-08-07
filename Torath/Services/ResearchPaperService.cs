@@ -41,7 +41,9 @@ namespace Torath.Services
                     CategoryId = rp.CategoryId,
                     CategoryName = rp.Category.Name,
                     CoverImageUrl = rp.CoverImageUrl,
-                    PdfFileUrl = rp.PdfFileUrl
+                    PdfFileUrl = rp.PdfFileUrl,
+                    Rating = rp.Rating,
+                    ViewCount = rp.ViewCount
                 }).ToListAsync();
 
             return new PagedResponse<ResearchPaperDto> { Data = papers, TotalRecords = totalRecords, PageNumber = page, PageSize = pageSize };
@@ -62,7 +64,9 @@ namespace Torath.Services
                 CategoryId = paper.CategoryId,
                 CategoryName = paper.Category.Name,
                 CoverImageUrl = paper.CoverImageUrl,
-                PdfFileUrl = paper.PdfFileUrl
+                PdfFileUrl = paper.PdfFileUrl,
+                Rating = paper.Rating,
+                ViewCount = paper.ViewCount
             };
         }
 

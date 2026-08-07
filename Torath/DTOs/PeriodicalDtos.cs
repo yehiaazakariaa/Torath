@@ -14,6 +14,8 @@
         public string ISSN { get; set; } = string.Empty;
         public double Rating { get; set; }
         public int ViewCount { get; set; }
+        public string? CoverImageUrl { get; set; }
+        public string? PdfFileUrl { get; set; }
     }
 
     // Notice we removed the extra "namespace Torath.DTOs {" that was wrapping this class

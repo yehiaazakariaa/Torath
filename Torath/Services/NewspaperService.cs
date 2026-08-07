@@ -44,7 +44,11 @@ namespace Torath.Services
                     CategoryId = n.CategoryId,
                     PdfFilePath = n.PdfFilePath,
                     Rating = n.Rating,
-                    ViewCount = n.ViewCount
+                    ViewCount = n.ViewCount,
+                    Description = n.Description,
+                    PublicationDate = n.PublicationDate,
+                    CategoryName = n.Category != null ? n.Category.Name : string.Empty,
+                    CoverImageUrl = n.CoverImageUrl,
                 })
                 .ToListAsync(cancellationToken);
 
@@ -68,7 +72,11 @@ namespace Torath.Services
                 CategoryId = n.CategoryId,
                 PdfFilePath = n.PdfFilePath,
                 Rating = n.Rating,
-                ViewCount = n.ViewCount
+                ViewCount = n.ViewCount,
+                Description = n.Description,
+                PublicationDate = n.PublicationDate,
+                CategoryName = n.Category != null ? n.Category.Name : string.Empty,
+                CoverImageUrl = n.CoverImageUrl,
             };
         }
 
