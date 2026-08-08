@@ -42,7 +42,7 @@ builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INewspaperService, NewspaperService>();
 builder.Services.AddScoped<IMagazineIssueService, MagazineIssueService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
-
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 // This single line registers the repository for EVERY entity automatically!
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
