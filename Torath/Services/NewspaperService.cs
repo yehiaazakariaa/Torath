@@ -64,6 +64,7 @@ namespace Torath.Services
 
             return new NewspaperReadDto
             {
+                Id = n.Id,
                 Title = n.Title,
                 Publisher = n.Publisher,
                 Frequency = n.Frequency,

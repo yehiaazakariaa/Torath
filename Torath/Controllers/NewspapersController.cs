@@ -125,8 +125,8 @@ namespace Torath.Controllers
                             Currency = "usd",
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
-                                Name = newspaper.Title,
-                                Images = new List<string> { newspaper.CoverImageUrl ?? "" }
+                                Name = newspaper.Title
+                                // Removed the Images array completely so empty URLs do not crash Stripe Checkout
                             },
                         },
                         Quantity = 1,
@@ -163,13 +163,16 @@ namespace Torath.Controllers
 
         [HttpGet("{id}/download")]
         [Authorize(Roles = "User, Admin")]
+
         public async Task<IActionResult> DownloadNewspaper(int id, CancellationToken cancellationToken = default)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isAdmin = User.IsInRole("Admin");
 
             var newspaper = await _newspaperService.GetByIdAsync(id, cancellationToken);
-            if (newspaper == null || string.IsNullOrEmpty(newspaper.PdfFileUrl))
+
+            // Ensure this matches your database column name (PdfFilePath)
+            if (newspaper == null || string.IsNullOrEmpty(newspaper.PdfFilePath))
                 return NotFound("Newspaper file not found.");
 
             // Check if they own it (Admins can download anything without paying)
@@ -181,16 +184,44 @@ namespace Torath.Controllers
                 return Forbid("You must purchase this newspaper before downloading.");
             }
 
-            // Assuming your PdfFileUrl is a relative path like "/uploads/magazines/file.pdf"
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", newspaper.PdfFileUrl.TrimStart('/'));
+            // THE FIX: Parse the full URL to get just the filename
+            var uri = new Uri(newspaper.PdfFilePath);
+            var fileName = Path.GetFileName(uri.LocalPath);
+
+            // Look for that filename inside your physical wwwroot/uploads/pdfs folder
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "pdfs", fileName);
 
             if (!System.IO.File.Exists(filePath))
-                return NotFound("File does not exist on server.");
+                return NotFound($"File does not exist on server. Looked for: {filePath}");
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath, cancellationToken);
 
             // Return the file for download
             return File(fileBytes, "application/pdf", $"{newspaper.Title}.pdf");
+        }
+
+        [HttpGet("admin/analytics")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAnalytics(CancellationToken cancellationToken = default)
+        {
+            // 1. Calculate Total Downloads (Count of completed purchases)
+            var totalDownloads = await _context.UserPurchases
+                .CountAsync(p => p.IsPaymentComplete, cancellationToken);
+
+            // 2. Calculate Total Revenue (Sum of the prices of all purchased newspapers)
+            var totalRevenue = await _context.UserPurchases
+                .Where(p => p.IsPaymentComplete)
+                .Join(_context.Set<Newspaper>(),
+                    purchase => purchase.NewspaperId,
+                    newspaper => newspaper.Id,
+                    (purchase, newspaper) => newspaper.Price)
+                .SumAsync(cancellationToken);
+
+            return Ok(new
+            {
+                TotalDownloads = totalDownloads,
+                TotalRevenue = totalRevenue
+            });
         }
     }
 }

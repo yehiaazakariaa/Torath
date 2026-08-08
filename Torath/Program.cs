@@ -22,7 +22,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // Covers Vite and standard React ports
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowCredentials()
+        .WithExposedHeaders("Content-Disposition");
     });
 });
 
