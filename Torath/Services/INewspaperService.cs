@@ -13,5 +13,8 @@ namespace Torath.Services
         Task<NewspaperReadDto> CreateAsync(NewspaperWriteDto request, CancellationToken cancellationToken);
         Task UpdateAsync(int id, NewspaperWriteDto request, CancellationToken cancellationToken);
         Task DeleteAsync(int id, CancellationToken cancellationToken);
+
+        Task IncrementViewCountAsync(int id, CancellationToken cancellationToken);
+        Task UpdateRatingAsync(int id, double rating, CancellationToken cancellationToken);
     }
 }

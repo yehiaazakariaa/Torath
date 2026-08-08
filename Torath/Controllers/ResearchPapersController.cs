@@ -53,5 +53,23 @@ namespace Torath.Controllers
         {
             return await _researchPaperService.DeleteAsync(id) ? NoContent() : NotFound();
         }
+
+        [HttpPost("{id}/view")]
+        [AllowAnonymous]
+        public async Task<IActionResult> IncrementViewCount(int id)
+        {
+            await _researchPaperService.IncrementViewCountAsync(id);
+            return Ok();
+        }
+
+        [HttpPost("{id}/rate")]
+        [Authorize(Roles = "User, Admin")]
+        public async Task<IActionResult> RateResearchPaper(int id, [FromBody] double rating)
+        {
+            if (rating < 0 || rating > 5) return BadRequest("Rating must be between 0 and 5.");
+
+            await _researchPaperService.UpdateRatingAsync(id, rating);
+            return Ok();
+        }
     }
 }

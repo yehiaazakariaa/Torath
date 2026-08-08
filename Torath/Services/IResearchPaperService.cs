@@ -9,5 +9,7 @@ namespace Torath.Services
         Task<ResearchPaperDto> CreateAsync(ResearchPaperWriteDto request);
         Task<bool> UpdateAsync(int id, ResearchPaperWriteDto request);
         Task<bool> DeleteAsync(int id);
+        Task IncrementViewCountAsync(int id);
+        Task UpdateRatingAsync(int id, double rating);
     }
 }

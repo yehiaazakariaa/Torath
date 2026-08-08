@@ -186,5 +186,27 @@ namespace Torath.Services
                 await _elasticService.DeleteDocumentAsync($"Newspaper_{id}");
             }
         }
+
+        public async Task IncrementViewCountAsync(int id, CancellationToken cancellationToken)
+        {
+            var newspaper = await _newspaperRepository.GetByIdAsync(id, cancellationToken);
+            if (newspaper != null)
+            {
+                newspaper.ViewCount += 1;
+                _newspaperRepository.Update(newspaper);
+                await _newspaperRepository.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task UpdateRatingAsync(int id, double rating, CancellationToken cancellationToken)
+        {
+            var newspaper = await _newspaperRepository.GetByIdAsync(id, cancellationToken);
+            if (newspaper != null)
+            {
+                newspaper.Rating = rating;
+                _newspaperRepository.Update(newspaper);
+                await _newspaperRepository.SaveChangesAsync(cancellationToken);
+            }
+        }
     }
 }

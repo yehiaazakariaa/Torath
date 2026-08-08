@@ -189,5 +189,33 @@ namespace Torath.Services
                 await _elasticService.DeleteDocumentAsync($"Book_{id}");
             }
         }
+
+
+
+        public async Task IncrementViewCountAsync(int id, CancellationToken cancellationToken)
+        {
+            var book = await _bookRepository.GetByIdAsync(id, cancellationToken);
+            if (book != null)
+            {
+                book.ViewCount += 1;
+                _bookRepository.Update(book);
+                await _bookRepository.SaveChangesAsync(cancellationToken);
+
+                // Optional: Update Elasticsearch so search results reflect the new view count instantly
+                // await _elasticService.UpdateDocumentAsync(...) 
+            }
+        }
+
+        public async Task UpdateRatingAsync(int id, double rating, CancellationToken cancellationToken)
+        {
+            var book = await _bookRepository.GetByIdAsync(id, cancellationToken);
+            if (book != null)
+            {
+                book.Rating = rating;
+                _bookRepository.Update(book);
+                await _bookRepository.SaveChangesAsync(cancellationToken);
+            }
+        }
     }
+
 }

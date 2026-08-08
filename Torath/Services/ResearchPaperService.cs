@@ -159,5 +159,25 @@ namespace Torath.Services
 
             return true;
         }
+
+        public async Task IncrementViewCountAsync(int id)
+        {
+            var paper = await _context.ResearchPapers.FindAsync(id);
+            if (paper != null)
+            {
+                paper.ViewCount += 1;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task UpdateRatingAsync(int id, double rating)
+        {
+            var paper = await _context.ResearchPapers.FindAsync(id);
+            if (paper != null)
+            {
+                paper.Rating = rating;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

@@ -65,5 +65,23 @@ namespace Torath.Controllers
             await _articleService.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
+
+        [HttpPost("{id}/view")]
+        [AllowAnonymous]
+        public async Task<IActionResult> IncrementViewCount(int id, CancellationToken cancellationToken = default)
+        {
+            await _articleService.IncrementViewCountAsync(id, cancellationToken);
+            return Ok();
+        }
+
+        [HttpPost("{id}/rate")]
+        [Authorize(Roles = "User, Admin")]
+        public async Task<IActionResult> RateArticle(int id, [FromBody] double rating, CancellationToken cancellationToken = default)
+        {
+            if (rating < 0 || rating > 5) return BadRequest("Rating must be between 0 and 5.");
+
+            await _articleService.UpdateRatingAsync(id, rating, cancellationToken);
+            return Ok();
+        }
     }
 }

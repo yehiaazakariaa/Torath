@@ -61,5 +61,28 @@ namespace Torath.Controllers
             await _bookService.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
+
+
+        [HttpPost("{id}/view")]
+        [AllowAnonymous] // Anyone viewing the card/page increments the view
+        public async Task<IActionResult> IncrementViewCount(int id, CancellationToken cancellationToken = default)
+        {
+            await _bookService.IncrementViewCountAsync(id, cancellationToken);
+            return Ok();
+        }
+
+        [HttpPost("{id}/rate")]
+        [Authorize(Roles = "User, Admin")] // Only logged in users can rate
+        public async Task<IActionResult> RateBook(int id, [FromBody] double rating, CancellationToken cancellationToken = default)
+        {
+            if (rating < 0 || rating > 5)
+            {
+                return BadRequest("Rating must be between 0 and 5.");
+            }
+
+            await _bookService.UpdateRatingAsync(id, rating, cancellationToken);
+            return Ok();
+        }
+
     }
 }
