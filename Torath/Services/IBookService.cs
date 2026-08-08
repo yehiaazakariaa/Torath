@@ -12,5 +12,7 @@ namespace Torath.Services
         Task<BookDto> CreateAsync(BookWriteDto request, CancellationToken cancellationToken);
         Task UpdateAsync(int id, BookWriteDto request, CancellationToken cancellationToken);
         Task DeleteAsync(int id, CancellationToken cancellationToken);
+        Task IncrementViewCountAsync(int id, CancellationToken cancellationToken);
+        Task UpdateRatingAsync(int id, double rating, CancellationToken cancellationToken);
     }
 }

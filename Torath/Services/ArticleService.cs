@@ -174,5 +174,27 @@ namespace Torath.Services
                 await _elasticService.DeleteDocumentAsync($"Article_{id}");
             }
         }
+
+        public async Task IncrementViewCountAsync(int id, CancellationToken cancellationToken)
+        {
+            var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
+            if (article != null)
+            {
+                article.ViewCount += 1;
+                _articleRepository.Update(article);
+                await _articleRepository.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task UpdateRatingAsync(int id, double rating, CancellationToken cancellationToken)
+        {
+            var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
+            if (article != null)
+            {
+                article.Rating = rating;
+                _articleRepository.Update(article);
+                await _articleRepository.SaveChangesAsync(cancellationToken);
+            }
+        }
     }
 }

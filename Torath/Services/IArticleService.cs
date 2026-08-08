@@ -12,5 +12,8 @@ namespace Torath.Services
         Task<ArticleDto> CreateAsync(ArticleWriteDto request, CancellationToken cancellationToken);
         Task UpdateAsync(int id, ArticleWriteDto request, CancellationToken cancellationToken);
         Task DeleteAsync(int id, CancellationToken cancellationToken);
+
+        Task IncrementViewCountAsync(int id, CancellationToken cancellationToken);
+        Task UpdateRatingAsync(int id, double rating, CancellationToken cancellationToken);
     }
 }
