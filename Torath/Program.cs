@@ -8,7 +8,7 @@ using Torath;
 using Torath.Middleware;
 using Torath.Repositories;
 using Torath.Services;
-
+using Stripe;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Add Controllers
@@ -38,7 +38,7 @@ builder.Services.AddScoped<IResearchPaperService, ResearchPaperService>();
 builder.Services.AddScoped<IMagazineService, MagazineService>();
 builder.Services.AddScoped<INewspaperIssueService, NewspaperIssueService>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IFileService, Torath.Services.FileService>();
 builder.Services.AddScoped<INewspaperService, NewspaperService>();
 builder.Services.AddScoped<IMagazineIssueService, MagazineIssueService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
@@ -106,6 +106,9 @@ builder.Services.AddScoped<Torath.Services.IElasticSearchService, Torath.Service
 var app = builder.Build();
 
 // --- THE MIDDLEWARE PIPELINE ---
+
+// Configure Stripe globally
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // 1. Error Handling
 app.UseMiddleware<ExceptionHandlingMiddleware>();

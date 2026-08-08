@@ -8,7 +8,7 @@
         public string Frequency { get; set; } = string.Empty;
         public string Language { get; set; } = string.Empty;
         public decimal Price { get; set; }
-      
+        public string? PdfFileUrl { get; set; }
         public double Rating { get; set; }
         public int ViewCount { get; set; }
         public int CategoryId { get; set; } // Required to prevent the Foreign Key error!

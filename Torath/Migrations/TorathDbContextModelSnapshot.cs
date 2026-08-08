@@ -264,6 +264,36 @@ namespace Torath.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Torath.Entities.UserPurchase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsPaymentComplete")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("NewspaperId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PurchaseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("StripeSessionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserPurchases");
+                });
+
             modelBuilder.Entity("Magazine", b =>
                 {
                     b.HasBaseType("Torath.Entities.BaseContent");
@@ -328,7 +358,7 @@ namespace Torath.Migrations
                         {
                             Id = 1,
                             CategoryId = 1,
-                            CreatedDate = new DateTime(2026, 8, 6, 20, 53, 7, 947, DateTimeKind.Utc).AddTicks(4594),
+                            CreatedDate = new DateTime(2026, 8, 8, 17, 24, 9, 612, DateTimeKind.Utc).AddTicks(7436),
                             Description = "A Craftsman's Guide to Software Structure",
                             Language = "English",
                             PublicationDate = new DateTime(2017, 9, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),

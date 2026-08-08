@@ -1,9 +1,16 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Stripe.Checkout;
 using Torath.DTOs;
+using Torath.Entities;
 using Torath.Services;
+using Torath.Repositories;
 
 namespace Torath.Controllers
 {
@@ -12,10 +19,12 @@ namespace Torath.Controllers
     public class NewspapersController : ControllerBase
     {
         private readonly INewspaperService _newspaperService;
+        private readonly TorathDbContext _context;
 
-        public NewspapersController(INewspaperService newspaperService)
+        public NewspapersController(INewspaperService newspaperService, TorathDbContext context)
         {
             _newspaperService = newspaperService;
+            _context = context;
         }
 
         [HttpGet]
@@ -85,6 +94,103 @@ namespace Torath.Controllers
 
             await _newspaperService.UpdateRatingAsync(id, rating, cancellationToken);
             return Ok();
+        }
+
+        [HttpPost("{id}/checkout")]
+        [Authorize(Roles = "User, Admin")]
+        public async Task<IActionResult> CreateCheckoutSession(int id, CancellationToken cancellationToken = default)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var newspaper = await _newspaperService.GetByIdAsync(id, cancellationToken);
+            if (newspaper == null) return NotFound("Newspaper not found.");
+
+            // Check if user already bought it
+            var alreadyPurchased = await _context.UserPurchases
+                .AnyAsync(p => p.UserId == userId && p.NewspaperId == id && p.IsPaymentComplete, cancellationToken);
+
+            if (alreadyPurchased) return BadRequest("You already own this newspaper.");
+
+            var options = new SessionCreateOptions
+            {
+                PaymentMethodTypes = new List<string> { "card" },
+                LineItems = new List<SessionLineItemOptions>
+                {
+                    new SessionLineItemOptions
+                    {
+                        PriceData = new SessionLineItemPriceDataOptions
+                        {
+                            UnitAmount = (long)(newspaper.Price * 100), // Stripe expects cents
+                            Currency = "usd",
+                            ProductData = new SessionLineItemPriceDataProductDataOptions
+                            {
+                                Name = newspaper.Title,
+                                Images = new List<string> { newspaper.CoverImageUrl ?? "" }
+                            },
+                        },
+                        Quantity = 1,
+                    },
+                },
+                Mode = "payment",
+                // The URLs your frontend will handle after payment
+                SuccessUrl = "http://localhost:3000/newspapers/" + id + "?success=true",
+                CancelUrl = "http://localhost:3000/newspapers/" + id + "?canceled=true",
+                ClientReferenceId = userId, // Pass the user ID so the webhook knows who bought it
+                Metadata = new Dictionary<string, string>
+                {
+                    { "NewspaperId", id.ToString() }
+                }
+            };
+
+            var service = new SessionService();
+            Session session = await service.CreateAsync(options);
+
+            // Save pending purchase to database
+            var purchase = new UserPurchase
+            {
+                UserId = userId,
+                NewspaperId = id,
+                PurchaseDate = DateTime.UtcNow,
+                StripeSessionId = session.Id,
+                IsPaymentComplete = false
+            };
+            await _context.UserPurchases.AddAsync(purchase, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Ok(new { url = session.Url });
+        }
+
+        [HttpGet("{id}/download")]
+        [Authorize(Roles = "User, Admin")]
+        public async Task<IActionResult> DownloadNewspaper(int id, CancellationToken cancellationToken = default)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+
+            var newspaper = await _newspaperService.GetByIdAsync(id, cancellationToken);
+            if (newspaper == null || string.IsNullOrEmpty(newspaper.PdfFileUrl))
+                return NotFound("Newspaper file not found.");
+
+            // Check if they own it (Admins can download anything without paying)
+            var ownsNewspaper = await _context.UserPurchases
+                .AnyAsync(p => p.UserId == userId && p.NewspaperId == id && p.IsPaymentComplete, cancellationToken);
+
+            if (!ownsNewspaper && !isAdmin)
+            {
+                return Forbid("You must purchase this newspaper before downloading.");
+            }
+
+            // Assuming your PdfFileUrl is a relative path like "/uploads/magazines/file.pdf"
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", newspaper.PdfFileUrl.TrimStart('/'));
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File does not exist on server.");
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath, cancellationToken);
+
+            // Return the file for download
+            return File(fileBytes, "application/pdf", $"{newspaper.Title}.pdf");
         }
     }
 }
