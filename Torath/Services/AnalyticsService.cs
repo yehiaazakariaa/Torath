@@ -32,34 +32,51 @@ namespace Torath.Services
             var viewArticles = await _context.Articles.SumAsync(x => x.ViewCount, cancellationToken);
             var viewPapers = await _context.ResearchPapers.SumAsync(x => x.ViewCount, cancellationToken);
 
-            var allItems = new List<AnalyticsItemDto>();
+            var topViewedItems = new List<AnalyticsItemDto>();
+            var topRatedItems = new List<AnalyticsItemDto>();
 
-            // 2. Fetch Top 10 Viewed from EACH table (Database does the sorting!)
-            allItems.AddRange(await _context.Books.OrderByDescending(x => x.ViewCount).Take(10)
+            // 2. Fetch Top 10 Viewed independently from EACH table
+            topViewedItems.AddRange(await _context.Books.OrderByDescending(x => x.ViewCount).Take(10)
                 .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Book", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
 
-            allItems.AddRange(await _context.Magazines.OrderByDescending(x => x.ViewCount).Take(10)
+            topViewedItems.AddRange(await _context.Magazines.OrderByDescending(x => x.ViewCount).Take(10)
                 .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Magazine", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
 
-            allItems.AddRange(await _context.Newspapers.OrderByDescending(x => x.ViewCount).Take(10)
+            topViewedItems.AddRange(await _context.Newspapers.OrderByDescending(x => x.ViewCount).Take(10)
                 .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Newspaper", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
 
-            allItems.AddRange(await _context.Articles.OrderByDescending(x => x.ViewCount).Take(10)
+            topViewedItems.AddRange(await _context.Articles.OrderByDescending(x => x.ViewCount).Take(10)
                 .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Article", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
 
-            allItems.AddRange(await _context.ResearchPapers.OrderByDescending(x => x.ViewCount).Take(10)
+            topViewedItems.AddRange(await _context.ResearchPapers.OrderByDescending(x => x.ViewCount).Take(10)
                 .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Research Paper", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
 
-            // 3. Compile the final Top 10 across all categories
-            var topViewed = allItems.OrderByDescending(x => x.ViewCount).Take(10).ToList();
-            var topRated = allItems.OrderByDescending(x => x.Rating).Take(10).ToList();
+            // 3. Fetch Top 10 Rated independently from EACH table
+            topRatedItems.AddRange(await _context.Books.OrderByDescending(x => x.Rating).Take(10)
+                .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Book", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
+
+            topRatedItems.AddRange(await _context.Magazines.OrderByDescending(x => x.Rating).Take(10)
+                .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Magazine", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
+
+            topRatedItems.AddRange(await _context.Newspapers.OrderByDescending(x => x.Rating).Take(10)
+                .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Newspaper", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
+
+            topRatedItems.AddRange(await _context.Articles.OrderByDescending(x => x.Rating).Take(10)
+                .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Article", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
+
+            topRatedItems.AddRange(await _context.ResearchPapers.OrderByDescending(x => x.Rating).Take(10)
+                .Select(x => new AnalyticsItemDto { Id = x.Id, Title = x.Title, Type = "Research Paper", ViewCount = x.ViewCount, Rating = x.Rating }).ToListAsync(cancellationToken));
+
+            // 4. Compile the final Top 10 across all categories
+            var finalTopViewed = topViewedItems.OrderByDescending(x => x.ViewCount).Take(10).ToList();
+            var finalTopRated = topRatedItems.OrderByDescending(x => x.Rating).Take(10).ToList();
 
             return new AnalyticsDashboardDto
             {
                 TotalItems = totalBooks + totalMags + totalNews + totalArticles + totalPapers,
                 TotalViews = viewBooks + viewMags + viewNews + viewArticles + viewPapers,
-                TopViewed = topViewed,
-                TopRated = topRated
+                TopViewed = finalTopViewed,
+                TopRated = finalTopRated
             };
         }
     }
