@@ -223,5 +223,19 @@ namespace Torath.Controllers
                 TotalRevenue = totalRevenue
             });
         }
+
+        [HttpGet("{id}/ownership")]
+        [Authorize(Roles = "User, Admin")]
+        public async Task<IActionResult> CheckOwnership(int id, CancellationToken cancellationToken = default)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var ownsNewspaper = await _context.UserPurchases
+                .AnyAsync(p => p.UserId == userId && p.NewspaperId == id && p.IsPaymentComplete, cancellationToken);
+
+            return Ok(new { isOwned = ownsNewspaper });
+        }
+
     }
 }
